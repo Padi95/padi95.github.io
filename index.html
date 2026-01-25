@@ -6,219 +6,144 @@
 <title>Zeiterfassung</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-:root {
-  --bg: #f4f4f2;
-  --card: #ffffff;
-  --border: #d6d6d0;
-  --text: #1f1f1f;
-  --accent: #6b8f71;
-  --danger: #c94a4a;
+:root{
+  --bg:#f4f4f2;
+  --card:#fff;
+  --border:#d6d6d0;
+  --text:#1f1f1f;
+  --accent:#6b8f71;
+  --danger:#c94a4a;
 }
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-               Roboto, "Helvetica Neue", Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
 }
 
 /* NAV */
-nav {
-  display: flex;
-  background: #1f1f1f;
+nav{display:flex;background:#1f1f1f}
+nav button{
+  flex:1;padding:1.2rem;border:none;background:none;
+  color:#aaa;font-size:1.1rem
+}
+nav button.active{
+  color:#fff;border-bottom:3px solid var(--accent)
 }
 
-nav button {
-  flex: 1;
-  padding: 1.2rem;
-  border: none;
-  background: none;
-  color: #aaa;
-  font-size: 1.1rem;
-}
-
-nav button.active {
-  color: white;
-  border-bottom: 3px solid var(--accent);
-}
-
-.page {
-  min-height: calc(100vh - 56px);
-  padding: 1.4rem;
-  display: flex;
-  flex-direction: column;
+/* PAGE */
+.page{
+  min-height:calc(100vh - 56px);
+  padding:1.4rem;
+  display:flex;
+  flex-direction:column;
 }
 
 /* HOME */
-.timer-wrapper {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.timer-wrapper{flex:1;display:flex;flex-direction:column;align-items:center}
+.top-area{width:100%;max-width:380px}
+
+.project-select{
+  width:100%;font-size:1.3rem;padding:1rem;
+  border-radius:18px;border:1px solid var(--border);
+  text-align:center;font-weight:700
 }
 
-.top-area {
-  width: 100%;
-  max-width: 380px;
-  margin-top: 1rem;
+.timer{
+  margin-top:1.6rem;
+  width:100%;
+  text-align:center;
+  font-family:"Courier New",monospace;
+  font-size:clamp(2.4rem,10vw,3.6rem);
+  line-height:1.1;
+  padding:1.6rem .6rem;
+  border-radius:28px;
+  background:#fafafa;
+  border:2px solid var(--border);
 }
 
-/* PROJECT SELECT */
-.project-select {
-  width: 100%;
-  font-size: 1rem;
-  padding: 1rem;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  text-align: center;
-  font-weight: 700;
-}
+.flex-spacer{flex:1}
 
-/* TIMER */
-.timer {
-  margin-top: 3rem;
-  width: 100%;
-  text-align: center;
-  font-family: "Courier New", monospace;
-  font-size: clamp(2.2rem, 10vw, 3.2rem);
-  padding: 3rem .6rem;
-  border-radius: 26px;
-  background: #fafafa;
-  border: 2px solid var(--border);
-  letter-spacing: .5px;
-  overflow: hidden;
+/* MAIN BUTTON */
+.main-btn{
+  width:220px;height:220px;border-radius:50%;
+  border:none;font-size:1.5rem;font-weight:800;
+  color:#fff;background:var(--accent);
+  box-shadow:0 14px 30px rgba(0,0,0,.18);
+  margin-bottom:4rem
 }
-
-.flex-spacer {
-  flex: 1;
+.main-btn.stop{
+  background:var(--danger);
+  animation:pulse 1.4s infinite
 }
-
-/* BUTTON */
-.main-btn {
-  width: 230px;
-  height: 230px;
-  border-radius: 50%;
-  border: none;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: white;
-  background: var(--accent);
-  box-shadow: 0 14px 30px rgba(0,0,0,.2);
-  margin-bottom: 1rem;
-}
-
-.main-btn.stop {
-  background: var(--danger);
-  animation: pulse 1.4s infinite;
-}
-
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(201,74,74,.6); }
-  70% { box-shadow: 0 0 0 22px rgba(201,74,74,0); }
-  100% { box-shadow: 0 0 0 0 rgba(201,74,74,0); }
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(201,74,74,.6)}
+  70%{box-shadow:0 0 0 22px rgba(201,74,74,0)}
+  100%{box-shadow:0 0 0 0 rgba(201,74,74,0)}
 }
 
 /* PROJECT LIST */
-.project-item {
-  position: relative;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 0.7rem 0.7rem 0.7rem 1rem;
-  margin-bottom: 1.2rem;
-  font-size: 1.7rem;
-  font-weight: 700;
+.project-item{
+  position:relative;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:1.6rem 3.2rem 1.6rem 2rem;
+  margin-bottom:1.1rem;
+  font-size:1.6rem;
+  font-weight:700;
 }
-
-.project-item span {
-  display: block;
-  margin-top: .5rem;
-  font-size: 1.2rem;
-  font-weight: 500;
+.project-item span{
+  display:block;margin-top:.4rem;font-size:1.15rem
 }
-
-.project-item::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 12%;
-  bottom: 12%;
-  width: 8px;
-  border-radius: 8px;
-  background: var(--project-color, var(--accent));
+.project-item::before{
+  content:"";position:absolute;left:0;top:12%;bottom:12%;
+  width:8px;border-radius:8px;background:var(--accent)
 }
 
 /* MODAL */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.45);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 20;
+.modal{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.45);
+  display:flex;justify-content:center;align-items:center;
+  z-index:20
+}
+.modal-card{
+  position:relative;background:#fff;width:92%;
+  max-width:480px;border-radius:24px;
+  padding:1.6rem 1.4rem;
+  max-height:85vh;overflow-y:auto
+}
+.modal-close{
+  position:absolute;top:.7rem;right:.7rem;
+  width:36px;height:36px;border-radius:50%;
+  background:#999;color:#fff;border:none;
+  font-size:1.3rem;font-weight:700
 }
 
-.modal-card {
-  position: relative;
-  background: white;
-  width: 92%;
-  max-width: 480px;
-  border-radius: 24px;
-  padding: 1.6rem 1.4rem;
-  max-height: 85vh;
-  overflow-y: auto;
+textarea{
+  width:100%;min-height:100px;padding:.8rem;
+  border-radius:14px;border:1px solid var(--border);
+  font-size:1rem
 }
 
-.modal-close {
-  position: absolute;
-  top: .7rem;
-  right: .7rem;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #aaa;
-  color: white;
-  border: none;
-  font-size: 1.3rem;
-  font-weight: 700;
-}
-
-.modal-card h3 {
-  font-size: 1.6rem;
-  margin-top: 0;
-}
-
-.modal-card textarea {
-  width: 100%;
-  min-height: 120px;
-  padding: .9rem;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  font-size: 1.05rem;
+.entry{border-bottom:1px solid #eee;padding:.9rem 0}
+.entry-top{display:flex;justify-content:space-between;align-items:center}
+.entry-delete{
+  border:none;background:#eee;border-radius:50%;
+  width:32px;height:32px
 }
 
 /* BOTTOM ACTIONS */
-.bottom-actions {
-  display: flex;
-  gap: .8rem;
-  margin-top: 1.5rem;
-}
-
-.bottom-actions button {
-  flex: 1;
-  padding: 1rem;
-  border-radius: 18px;
-  border: none;
-  font-size: 1.15rem;
-  font-weight: 700;
-  background: var(--accent);
-  color: white;
+.bottom-actions{display:flex;gap:.8rem;margin-top:1rem}
+.bottom-actions button{
+  flex:1;padding:.9rem;border-radius:16px;
+  border:none;font-size:1.1rem;font-weight:600;
+  background:var(--accent);color:#fff
 }
 </style>
 </head>
@@ -234,28 +159,25 @@ nav button.active {
 <!-- HOME -->
 <div v-if="tab==='home'" class="page">
   <div class="timer-wrapper">
-
     <div class="top-area">
       <select class="project-select" v-model="selectedProjectId">
         <option disabled value="">Projekt auswählen</option>
-        <option v-for="p in projects" :value="p.id">{{ p.name }}</option>
+        <option v-for="p in projects" :value="p.id">{{p.name}}</option>
       </select>
-
-      <div class="timer">{{ formattedTime }}</div>
+      <div class="timer">{{formattedTime}}</div>
     </div>
 
     <div class="flex-spacer"></div>
 
     <button v-if="!running" class="main-btn" @click="start">Start</button>
     <button v-else class="main-btn stop" @click="stop">Stop</button>
-
   </div>
 </div>
 
 <!-- NOTE MODAL -->
 <div v-if="showNote" class="modal">
   <div class="modal-card">
-    <button class="modal-close" @click="showNote=false">×</button>
+    <button class="modal-close" @click="skipNote">×</button>
     <h3>Beschreibung</h3>
     <textarea v-model="note"></textarea>
     <button style="margin-top:1rem;width:100%" @click="saveEntry">Speichern</button>
@@ -264,32 +186,33 @@ nav button.active {
 
 <!-- PROJECT OVERVIEW -->
 <div v-if="tab==='projects'" class="page">
-  <div v-for="p in projects"
-       :key="p.id"
+  <div v-for="p in projects" :key="p.id"
        class="project-item"
-       :style="{ '--project-color': p.color }"
+       :style="{'--accent':p.color}"
        @click="openProject(p)">
-    {{ p.name }}
-    <span>{{ (p.total/3600).toFixed(2) }} Stunden</span>
+    {{p.name}}
+    <span>{{(p.total/3600).toFixed(2)}} Stunden</span>
   </div>
 
   <div class="bottom-actions">
-    <button @click="addProjectPrompt">Projekt +</button>
-    <button @click="exportAll">Export ⬆</button>
+    <button @click="addProject">Projekt hinzufügen</button>
+    <button @click="exportAll">Export</button>
   </div>
 </div>
 
-<!-- PROJECT DETAIL MODAL -->
+<!-- PROJECT DETAIL -->
 <div v-if="selectedProject" class="modal">
   <div class="modal-card">
     <button class="modal-close" @click="selectedProject=null">×</button>
-    <h3>{{ selectedProject.name }}</h3>
+    <h3>{{selectedProject.name}}</h3>
 
-    <div v-for="(e,i) in selectedProject.entries" :key="i">
-      <strong>{{ formatDate(e.start) }}</strong><br>
-      ⏱ {{ (e.duration/3600).toFixed(2) }} h
+    <div v-for="(e,i) in selectedProject.entries" :key="e.id" class="entry">
+      <div class="entry-top">
+        <strong>{{formatDate(e.start)}}</strong>
+        <button class="entry-delete" @click="deleteEntry(i)">🗑️</button>
+      </div>
+      ⏱ {{(e.duration/3600).toFixed(2)}} h
       <textarea v-model="e.note" @change="save"></textarea>
-      <hr>
     </div>
   </div>
 </div>
@@ -297,116 +220,117 @@ nav button.active {
 </div>
 
 <script>
-const { createApp } = Vue
+const EXPORT_URL = "https://script.google.com/macros/s/AKfycbwvoPUsNQ75o6NLuIeUgXx46Fn8qoWKD5ql8heYLREMvlqOe-y0dwe-zpUNEMeUcrve1A/exec";
 
-const PROJECT_COLORS = [
-  "#6b8f71",
-  "#8f7a6b",
-  "#6b7c8f",
-  "#8f6b83",
-  "#7f8f6b",
-  "#8f6f6b"
-]
-
+const {createApp}=Vue
 createApp({
-  data() {
-    return {
-      tab: 'home',
-      projects: JSON.parse(localStorage.getItem('projects') || '[]'),
-      selectedProjectId: '',
-      selectedProject: null,
-      running: false,
-      startTime: null,
-      timer: null,
-      elapsed: 0,
-      showNote: false,
-      note: ''
+  data(){
+    return{
+      tab:'home',
+      projects:JSON.parse(localStorage.getItem('projects')||'[]'),
+      selectedProjectId:'',
+      selectedProject:null,
+      running:false,
+      startTime:null,
+      timer:null,
+      elapsed:0,
+      showNote:false,
+      note:''
     }
   },
-
-  computed: {
-    formattedTime() {
-      const s = Math.floor(this.elapsed)
-      return String(Math.floor(s/3600)).padStart(2,'0') + ':' +
-             String(Math.floor((s%3600)/60)).padStart(2,'0') + ':' +
+  computed:{
+    formattedTime(){
+      const s=Math.floor(this.elapsed)
+      return String(Math.floor(s/3600)).padStart(2,'0')+':'+
+             String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+
              String(s%60).padStart(2,'0')
     }
   },
-
-  methods: {
-    start() {
-      if (!this.selectedProjectId) return alert("Projekt wählen")
-      this.running = true
-      this.startTime = Date.now()
-      this.timer = setInterval(() => {
-        this.elapsed = (Date.now() - this.startTime) / 1000
-      }, 1000)
+  methods:{
+    start(){
+      if(!this.selectedProjectId)return alert("Projekt wählen")
+      this.running=true
+      this.startTime=Date.now()
+      this.timer=setInterval(()=>{
+        this.elapsed=(Date.now()-this.startTime)/1000
+      },1000)
     },
-
-    stop() {
+    stop(){
       clearInterval(this.timer)
-      this.running = false
-      this.showNote = true
+      this.running=false
+      this.showNote=true
     },
-
-    saveEntry() {
-      const p = this.projects.find(p => p.id === this.selectedProjectId)
+    saveEntry(){
+      const p=this.projects.find(p=>p.id===this.selectedProjectId)
       p.entries.unshift({
-        start: new Date().toISOString(),
-        duration: this.elapsed,
-        note: this.note
+        id:crypto.randomUUID(),
+        start:new Date().toISOString(),
+        duration:this.elapsed,
+        note:this.note,
+        exported:false
       })
-      p.total += this.elapsed
-      this.elapsed = 0
-      this.note = ''
-      this.showNote = false
+      p.total+=this.elapsed
+      this.resetAfterSave()
+    },
+    skipNote(){
+      this.note=''
+      this.saveEntry()
+    },
+    resetAfterSave(){
+      this.elapsed=0
+      this.note=''
+      this.showNote=false
       this.save()
     },
-
-    addProjectPrompt() {
-      const name = prompt("Projektname:")
-      if (!name) return
-
-      const color = PROJECT_COLORS[
-        this.projects.length % PROJECT_COLORS.length
-      ]
-
+    addProject(){
+      const name=prompt("Projektname")
+      if(!name)return
       this.projects.push({
-        id: Date.now(),
+        id:Date.now(),
         name,
-        color,
-        entries: [],
-        total: 0
+        entries:[],
+        total:0,
+        color:`hsl(${Math.random()*360},30%,55%)`
       })
-
       this.save()
     },
-
-    openProject(p) {
-      this.selectedProject = p
+    openProject(p){this.selectedProject=p},
+    deleteEntry(i){
+      const e=this.selectedProject.entries[i]
+      this.selectedProject.total-=e.duration
+      this.selectedProject.entries.splice(i,1)
+      this.save()
     },
+    exportAll(){
+      const data=this.projects.map(p=>({
+        name:p.name,
+        entries:p.entries.filter(e=>!e.exported)
+      })).filter(p=>p.entries.length)
 
-    formatDate(iso) {
-      const d = new Date(iso)
-      return d.toLocaleDateString('de-DE') + ' ' +
-             d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})
-    },
+      if(!data.length){alert("Keine neuen Einträge");return}
 
-    exportAll() {
-      fetch("https://script.google.com/macros/s/AKfycbz6tOwWixxm3GZkqWAxy9X8lKK8muaIrR-YkEDsOGHnwpDXGqfAuJl46oyTi4dVlZjzhw/exec", {
-        method: "POST",
-        mode: "no-cors",
-        body: JSON.stringify(this.projects)
+      const payload=btoa(unescape(encodeURIComponent(JSON.stringify(data))))
+      fetch(EXPORT_URL+"?data="+encodeURIComponent(payload))
+
+      data.forEach(p=>{
+        const orig=this.projects.find(x=>x.name===p.name)
+        p.entries.forEach(e=>{
+          const o=orig.entries.find(x=>x.id===e.id)
+          if(o)o.exported=true
+        })
       })
-      alert("Export gesendet")
+      this.save()
+      alert("Neue Einträge exportiert")
     },
-
-    save() {
-      localStorage.setItem('projects', JSON.stringify(this.projects))
+    formatDate(iso){
+      const d=new Date(iso)
+      return d.toLocaleDateString('de-DE')+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})
+    },
+    save(){
+      localStorage.setItem('projects',JSON.stringify(this.projects))
     }
   }
 }).mount('#app')
 </script>
-
 </body>
 </html>
