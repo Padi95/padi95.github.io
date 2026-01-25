@@ -1,18 +1,18 @@
-const CACHE = "zeiterfassung-v1"
-const FILES = [
+const CACHE_NAME = "zeiterfassung-v1";
+const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json"
-]
+];
 
 self.addEventListener("install", e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(FILES))
-  )
-})
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+  );
+});
 
 self.addEventListener("fetch", e => {
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
-  )
-})
+    caches.match(e.request).then(res => res || fetch(e.request))
+  );
+});
