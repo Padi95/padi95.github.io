@@ -6,7 +6,7 @@
 <title>Zeiterfassung</title>
 
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?familyInter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root{
@@ -204,7 +204,16 @@ textarea{
 <div v-if="selectedProject" class="modal">
   <div class="modal-card">
     <button class="modal-close" @click="selectedProject=null">×</button>
-    <h3>{{selectedProject.name}}</h3>
+
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">{{selectedProject.name}}</h3>
+      <button
+        style="border:none;background:none;color:var(--danger);font-size:1.1rem"
+        @click="deleteProject"
+      >
+        Projekt löschen
+      </button>
+    </div>
 
     <div v-for="(e,i) in selectedProject.entries" :key="e.id" class="entry">
       <div class="entry-top">
@@ -220,117 +229,164 @@ textarea{
 </div>
 
 <script>
-const EXPORT_URL = "https://script.google.com/macros/s/AKfycbwvoPUsNQ75o6NLuIeUgXx46Fn8qoWKD5ql8heYLREMvlqOe-y0dwe-zpUNEMeUcrve1A/exec";
+const EXPORT_URL = "https://script.google.com/macros/s/AKfycbyTOSJT9mTKqtDct7aUMq734duRHBmJeGdmDkruf1qItUuxgUSpDlr9WEWCv92OW3AqGg/exec";
 
-const {createApp}=Vue
+const { createApp } = Vue;
+
 createApp({
-  data(){
-    return{
-      tab:'home',
-      projects:JSON.parse(localStorage.getItem('projects')||'[]'),
-      selectedProjectId:'',
-      selectedProject:null,
-      running:false,
-      startTime:null,
-      timer:null,
-      elapsed:0,
-      showNote:false,
-      note:''
+  data() {
+    return {
+      tab: 'home',
+      projects: JSON.parse(localStorage.getItem('projects') || '[]'),
+      selectedProjectId: '',
+      selectedProject: null,
+      running: false,
+      startTime: null,
+      timer: null,
+      elapsed: 0,
+      showNote: false,
+      note: ''
     }
   },
-  computed:{
-    formattedTime(){
-      const s=Math.floor(this.elapsed)
-      return String(Math.floor(s/3600)).padStart(2,'0')+':'+
-             String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+
-             String(s%60).padStart(2,'0')
+
+  computed: {
+    formattedTime() {
+      const s = Math.floor(this.elapsed);
+      return (
+        String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
+        String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' +
+        String(s % 60).padStart(2, '0')
+      );
     }
   },
-  methods:{
-    start(){
-      if(!this.selectedProjectId)return alert("Projekt wählen")
-      this.running=true
-      this.startTime=Date.now()
-      this.timer=setInterval(()=>{
-        this.elapsed=(Date.now()-this.startTime)/1000
-      },1000)
+
+  methods: {
+
+    start() {
+      if (!this.selectedProjectId) return alert("Projekt wählen");
+      this.running = true;
+      this.startTime = Date.now();
+      this.timer = setInterval(() => {
+        this.elapsed = (Date.now() - this.startTime) / 1000;
+      }, 1000);
     },
-    stop(){
-      clearInterval(this.timer)
-      this.running=false
-      this.showNote=true
+
+    stop() {
+      clearInterval(this.timer);
+      this.running = false;
+      this.showNote = true;
     },
-    saveEntry(){
-      const p=this.projects.find(p=>p.id===this.selectedProjectId)
+
+    saveEntry() {
+      const p = this.projects.find(p => p.id === this.selectedProjectId);
       p.entries.unshift({
-        id:crypto.randomUUID(),
-        start:new Date().toISOString(),
-        duration:this.elapsed,
-        note:this.note,
-        exported:false
-      })
-      p.total+=this.elapsed
-      this.resetAfterSave()
+        id: crypto.randomUUID(),
+        start: new Date().toISOString(),
+        duration: this.elapsed,
+        note: this.note,
+        exported: false
+      });
+      p.total += this.elapsed;
+      this.resetAfterSave();
     },
-    skipNote(){
-      this.note=''
-      this.saveEntry()
+
+    skipNote() {
+      this.note = '';
+      this.saveEntry();
     },
-    resetAfterSave(){
-      this.elapsed=0
-      this.note=''
-      this.showNote=false
-      this.save()
+
+    resetAfterSave() {
+      this.elapsed = 0;
+      this.note = '';
+      this.showNote = false;
+      this.save();
     },
-    addProject(){
-      const name=prompt("Projektname")
-      if(!name)return
+
+    addProject() {
+      const name = prompt("Projektname");
+      if (!name) return;
       this.projects.push({
-        id:Date.now(),
+        id: Date.now(),
         name,
-        entries:[],
-        total:0,
-        color:`hsl(${Math.random()*360},30%,55%)`
-      })
-      this.save()
+        entries: [],
+        total: 0,
+        color: `hsl(${Math.random() * 360},30%,55%)`
+      });
+      this.save();
     },
-    openProject(p){this.selectedProject=p},
-    deleteEntry(i){
-      const e=this.selectedProject.entries[i]
-      this.selectedProject.total-=e.duration
-      this.selectedProject.entries.splice(i,1)
-      this.save()
-    },
-    exportAll(){
-      const data=this.projects.map(p=>({
-        name:p.name,
-        entries:p.entries.filter(e=>!e.exported)
-      })).filter(p=>p.entries.length)
 
-      if(!data.length){alert("Keine neuen Einträge");return}
-
-      const payload=btoa(unescape(encodeURIComponent(JSON.stringify(data))))
-      fetch(EXPORT_URL+"?data="+encodeURIComponent(payload))
-
-      data.forEach(p=>{
-        const orig=this.projects.find(x=>x.name===p.name)
-        p.entries.forEach(e=>{
-          const o=orig.entries.find(x=>x.id===e.id)
-          if(o)o.exported=true
-        })
-      })
-      this.save()
-      alert("Neue Einträge exportiert")
+    openProject(p) {
+      this.selectedProject = p;
     },
-    formatDate(iso){
-      const d=new Date(iso)
-      return d.toLocaleDateString('de-DE')+' '+d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})
+
+    deleteEntry(i) {
+      const e = this.selectedProject.entries[i];
+      this.selectedProject.total -= e.duration;
+      this.selectedProject.entries.splice(i, 1);
+      this.save();
     },
-    save(){
-      localStorage.setItem('projects',JSON.stringify(this.projects))
+
+    deleteProject() {
+      if (!confirm("Projekt wirklich löschen?")) return;
+      const index = this.projects.findIndex(p => p.id === this.selectedProject.id);
+      if (index === -1) return;
+      this.projects.splice(index, 1);
+      this.selectedProject = null;
+      this.selectedProjectId = '';
+      this.save();
+    },
+
+async exportAll() {
+  const data = this.projects
+    .map(p => ({
+      id: p.id,
+      name: p.name,
+      entries: p.entries.filter(e => !e.exported)
+    }))
+    .filter(p => p.entries.length);
+
+  if (!data.length) {
+    alert("Keine neuen Einträge");
+    return;
+  }
+
+  try {
+    const res = await fetch(EXPORT_URL, {
+      method: "POST",
+      body: JSON.stringify({ projects: data })
+    });
+
+    if (!res.ok) throw new Error("Export fehlgeschlagen");
+
+    data.forEach(p => {
+      const orig = this.projects.find(x => x.id === p.id);
+      p.entries.forEach(e => {
+        const o = orig.entries.find(x => x.id === e.id);
+        if (o) o.exported = true;
+      });
+    });
+
+    this.save();
+    alert("Export erfolgreich ✅");
+
+  } catch (err) {
+    console.error(err);
+    alert("Fehler beim Export ❌");
+  }
+},
+
+    formatDate(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString('de-DE') + ' ' +
+        d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    },
+
+    save() {
+      localStorage.setItem('projects', JSON.stringify(this.projects));
     }
   }
-}).mount('#app')
+}).mount('#app');
 </script>
+
 </body>
 </html>
