@@ -198,6 +198,17 @@ textarea{
     <button @click="addProject">Projekt hinzufügen</button>
     <button @click="exportAll">Export</button>
   </div>
+  <label style="display:block;margin-bottom:.4rem">
+  Benutzer
+</label>
+
+<select v-model="selectedUser"
+        style="width:100%;padding:.6rem;margin-bottom:1rem">
+  <option v-for="u in users" :key="u" :value="u">
+    {{ u }}
+  </option>
+</select>
+
 </div>
 
 <!-- PROJECT DETAIL -->
@@ -287,7 +298,7 @@ textarea{
 </div>
 
 <script>
-const EXPORT_URL = "https://script.google.com/macros/s/AKfycbyTOSJT9mTKqtDct7aUMq734duRHBmJeGdmDkruf1qItUuxgUSpDlr9WEWCv92OW3AqGg/exec";
+const EXPORT_URL = "https://script.google.com/macros/s/AKfycbx0HbkmzbJg52ARqht_5lR0BRcvay8fVOUO7UjubZGBDHp6y3MiIt4bjlkEz98dFHyqcg/exec";
 
 const { createApp } = Vue;
 
@@ -306,6 +317,9 @@ createApp({
       note: '',
       editDurationEntry: null,
       editDurationHours: 0,
+      users: ["Bennet", "Dennis", "Till", "Nicole", "Patrick",],
+      selectedUser: localStorage.getItem("selectedUser") || null,
+
 
     }
   },
@@ -320,6 +334,15 @@ createApp({
       );
     }
   },
+
+    watch: {
+    selectedUser(newVal) {
+      if (newVal) {
+        localStorage.setItem("selectedUser", newVal);
+      }
+    }
+  },
+
 
   methods: {
 
@@ -434,6 +457,12 @@ saveEditedDuration() {
 async exportAll() {
   const data = this.projects
     .map(p => ({
+      users: [
+        "Max",
+        "Anna",
+        "Tim"
+      ],
+      selectedUser: "Max",
       id: p.id,
       name: p.name,
       entries: p.entries.filter(e => !e.exported)
@@ -447,9 +476,13 @@ async exportAll() {
 
   try {
     const res = await fetch(EXPORT_URL, {
-      method: "POST",
-      body: JSON.stringify({ projects: data })
-    });
+  method: "POST",
+  body: JSON.stringify({
+    user: this.selectedUser,
+    projects: data
+  })
+});
+
 
     if (!res.ok) throw new Error("Export fehlgeschlagen");
 
