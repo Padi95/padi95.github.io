@@ -199,10 +199,7 @@ textarea{
     <button @click="addProject">Projekt hinzufügen</button>
     <button @click="exportAll">Export</button>
   </div>
-  <label style="display:block;margin-bottom:.4rem">
-  Benutzer
-</label>
-
+  <label style="display:block;margin-bottom:.4rem; margin-top: 1rem;"> </label>
 <select v-model="selectedUser"
         style="width:100%;padding:.6rem;margin-bottom:1rem">
   <option v-for="u in users" :key="u" :value="u">
