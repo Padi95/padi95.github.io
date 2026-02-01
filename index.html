@@ -33,7 +33,7 @@ nav button{
   color:#aaa;font-size:1.1rem
 }
 nav button.active{
-  color:#fff;border-bottom:3px solid var(--accent)
+  color:#fff;border-bottom:8px solid var(--accent)
 }
 
 /* PAGE */
@@ -153,8 +153,8 @@ textarea{
 <div id="app">
 
 <nav>
-  <button :class="{active:tab==='home'}" @click="tab='home'">⏱</button>
-  <button :class="{active:tab==='projects'}" @click="tab='projects'">📋</button>
+  <button :class="{active:tab==='home'}" @click="tab='home'">Timer</button>
+  <button :class="{active:tab==='projects'}" @click="tab='projects'">Übersicht</button>
 </nav>
 
 <!-- HOME -->
@@ -200,6 +200,7 @@ textarea{
     <button @click="exportAll">Export</button>
   </div>
   <label style="display:block;margin-bottom:.4rem; margin-top: 1rem;"> </label>
+
 <select v-model="selectedUser"
         style="width:100%;padding:.6rem;margin-bottom:1rem">
   <option v-for="u in users" :key="u" :value="u">
