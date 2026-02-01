@@ -203,6 +203,7 @@ textarea{
 
 <select v-model="selectedUser"
         style="width:100%;padding:0.8rem;margin-bottom:1rem">
+  <option disabled value="">Benutzer auswählen</option>
   <option v-for="u in users" :key="u" :value="u">
     {{ u }}
   </option>
@@ -317,7 +318,7 @@ createApp({
       editDurationEntry: null,
       editDurationHours: 0,
       users: ["Bennet", "Dennis", "Till", "Nicole", "Patrick",],
-      selectedUser: localStorage.getItem("selectedUser") || null,
+      selectedUser: localStorage.getItem("selectedUser") || "",
 
 
     }
@@ -454,6 +455,12 @@ saveEditedDuration() {
 
 
 async exportAll() {
+
+  if (!this.selectedUser) {
+    alert("Bitte Benutzer wählen");
+    return;
+  }
+
   const data = this.projects
     .map(p => ({
       users: [
