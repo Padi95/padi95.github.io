@@ -51,6 +51,7 @@ nav button.active{
 .project-select{
   width:100%;font-size:1.3rem;padding:1rem;
   border-radius:18px;border:1px solid var(--border);
+  background-color: #ffffff;
   text-align:center;font-weight:700
 }
 
@@ -202,7 +203,7 @@ textarea{
   <label style="display:block;margin-bottom:.4rem; margin-top: 1.5rem;"> </label>
 
 <select v-model="selectedUser"
-        style="width:100%;padding:0.8rem;margin-bottom:1rem">
+        style="width:100%;padding:0.8rem;margin-bottom:1rem; background-color: #ffffff;">
   <option disabled value="">Benutzer auswählen</option>
   <option v-for="u in users" :key="u" :value="u">
     {{ u }}
