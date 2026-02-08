@@ -17,7 +17,6 @@
   --text:#1f1f1f;
   --accent:#427da1;
   --danger:#c94a4a;
-
 }
 *{box-sizing:border-box}
 body{
@@ -102,6 +101,7 @@ nav button.active{
 }
 .project-item span{
   display:block;margin-top:.4rem;font-size:0.75rem
+  
 }
 .project-item::before{
   content:"";position:absolute;left:0;top:12%;bottom:12%;
@@ -156,7 +156,8 @@ textarea{
 
 <nav>
   <button :class="{active:tab==='home'}" @click="tab='home'">Timer</button>
-  <button :class="{active:tab==='projects'}" @click="tab='projects'">Übersicht</button>
+  <button :class="{active:tab==='days'}" @click="tab='days'">Tagesansicht</button>
+  <button :class="{active:tab==='projects'}" @click="tab='projects'">Projektansicht</button>
 </nav>
 
 <!-- HOME -->
@@ -297,11 +298,100 @@ textarea{
   </div>
 </div>
 
+<!-- DAY DETAIL MODAL -->
+<div v-if="dayDetail" class="modal">
+  <div class="modal-card">
+    <button class="modal-close" @click="selectedDay=null">×</button>
+
+    <h3 style="margin:0">
+      {{ formatDay(dayDetail.date) }}
+    </h3>
+
+    <p style="margin:.4rem 0 1rem 0;font-weight:700">
+      ⏱ {{ (dayDetail.totalSeconds / 3600).toFixed(2) }} Stunden
+    </p>
+
+<div v-for="p in dayDetail.projects" :key="p.name"
+     style="
+       position:relative;
+       margin-bottom:1.2rem;
+       padding:0.6rem 0.6rem 0.6rem 1.2rem;
+       border-radius:14px;
+       background:#b1bcc82d;
+     ">
+      <span
+    :style="{
+      position: 'absolute',
+      left: 0,
+      top: '10%',
+      bottom: '10%',
+      width: '8px',
+      borderRadius: '6px',
+      background: p.color
+    }">
+  </span>
+
+
+
+      <div style="display:flex;justify-content:space-between;align-items:center;
+                  font-weight:700;margin-bottom:.4rem">
+
+        <span>{{ p.name }}</span>
+
+        <span style="font-size:1rem">
+          {{ (p.seconds / 3600).toFixed(2) }} h
+        </span>
+
+      </div>
+
+      <div v-for="e in p.entries" :key="e.id"
+           style="padding:.4rem 0;border-bottom:1px solid #eee;
+                  font-size:.85rem">
+
+  
+<span style="font-weight:400">
+  {{ (e.duration / 3600).toFixed(2) }} h
+</span>
+
+        <div v-if="e.note" style="color:#666">
+          {{ e.note }}
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- DAY OVERVIEW -->
+<div v-if="tab==='days'" class="page">
+
+<div v-for="d in daysOverview"
+     :key="d.date"
+     class="project-item"
+     style="cursor:pointer"
+     @click="openDay(d.date)">
+
+
+    {{ formatDay(d.date) }}
+    <span>{{ (d.seconds / 3600).toFixed(2) }} Stunden</span>
+
+  </div>
+
+  <div v-if="!daysOverview.length"
+       style="text-align:center;color:#777;margin-top:3rem">
+    Noch keine Einträge vorhanden
+  </div>
+
+</div>
+
+
 </div>
 
 <script>
-const EXPORT_URL = "https://script.google.com/macros/s/AKfycbx0HbkmzbJg52ARqht_5lR0BRcvay8fVOUO7UjubZGBDHp6y3MiIt4bjlkEz98dFHyqcg/exec";
-
+const EXPORT_URL = "https://script.google.com/macros/s/AKfycbx8RQGWRNP2fagujXfUly4lB0clt-ZY8Yl6ILO4pMlNEoGRa8c73arzXtConVKCxx1jhQ/exec";
+                    
 const { createApp } = Vue;
 
 createApp({
@@ -321,21 +411,80 @@ createApp({
       editDurationHours: 0,
       users: ["Bennet", "Dennis", "Till", "Nicole", "Patrick",],
       selectedUser: localStorage.getItem("selectedUser") || "",
+      selectedDay: null,
+
 
 
     }
   },
 
-  computed: {
-    formattedTime() {
-      const s = Math.floor(this.elapsed);
-      return (
-        String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
-        String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' +
-        String(s % 60).padStart(2, '0')
-      );
-    }
+computed: {
+  formattedTime() {
+    const s = Math.floor(this.elapsed);
+    return (
+      String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
+      String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' +
+      String(s % 60).padStart(2, '0')
+    );
   },
+
+  daysOverview() {
+    const map = {};
+
+    this.projects.forEach(p => {
+      p.entries.forEach(e => {
+        const day = e.start.slice(0, 10); // YYYY-MM-DD
+
+        if (!map[day]) {
+          map[day] = {
+            date: day,
+            seconds: 0
+          };
+        }
+
+        map[day].seconds += e.duration;
+      });
+    });
+
+    return Object.values(map)
+      .sort((a, b) => b.date.localeCompare(a.date));
+  },
+  dayDetail() {
+  if (!this.selectedDay) return null;
+
+  const projectsMap = {};
+  let totalSeconds = 0;
+
+  this.projects.forEach(p => {
+    p.entries.forEach(e => {
+      const day = e.start.slice(0, 10);
+      if (day !== this.selectedDay) return;
+
+      if (!projectsMap[p.id]) {
+        projectsMap[p.id] = {
+          name: p.name,
+          color: p.color,
+          seconds: 0,
+          entries: []
+        };
+      }
+
+      projectsMap[p.id].seconds += e.duration;
+      totalSeconds += e.duration;
+
+      projectsMap[p.id].entries.push(e);
+    });
+  });
+
+  return {
+    date: this.selectedDay,
+    totalSeconds,
+    projects: Object.values(projectsMap)
+  };
+}
+
+},
+
 
     watch: {
     selectedUser(newVal) {
@@ -453,6 +602,20 @@ saveEditedDuration() {
   this.editDurationEntry = null;
   this.save();
 },
+formatDay(isoDay) {
+  const d = new Date(isoDay);
+  return d.toLocaleDateString('de-DE', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+},
+openDay(day) {
+  this.selectedDay = day;
+},
+
+
 
 
 
