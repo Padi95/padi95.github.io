@@ -88,6 +88,7 @@ nav button.active{
   100%{box-shadow:0 0 0 0 rgba(201,74,74,0)}
 }
 
+
 /* PROJECT LIST */
 .project-item{
   position:relative;
@@ -148,6 +149,36 @@ textarea{
   border:none;font-size:1.1rem;font-weight:600;
   background:var(--accent);color:#fff
 }
+
+.pause-container{
+  height:60px;              /* fester Platz für Pause-Button */
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  margin-top:1.2rem;
+  margin-bottom: 2rem;
+}
+
+.pause-btn{
+  padding:1.5rem 3rem;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-weight:600;
+}
+
+.icon-btn{
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  font-size:2rem;     /* ⬅ größer */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+
+
 </style>
 </head>
 
@@ -171,12 +202,27 @@ textarea{
       <div class="timer">{{formattedTime}}</div>
     </div>
 
-    <div class="flex-spacer"></div>
+<div class="flex-spacer"></div>
 
-    <button v-if="!running" class="main-btn" @click="start">Start</button>
-    <button v-else class="main-btn stop" @click="stop">Stop</button>
-  </div>
+<button v-if="!running" class="main-btn" @click="start">Start</button>
+<button v-else
+        :class="['main-btn', !paused ? 'stop' : '']"
+        @click="stop">
+  Stop
+</button>
+
+<div class="pause-container">
+  <button v-if="running"
+          @click="paused ? resume() : pause()"
+          class="pause-btn icon-btn">
+
+    <span v-if="!paused">⏸</span>
+    <span v-else>▶</span>
+
+  </button>
 </div>
+</div>  <!-- timer-wrapper -->
+</div>  <!-- HOME page -->
 
 <!-- NOTE MODAL -->
 <div v-if="showNote" class="modal">
@@ -229,39 +275,55 @@ textarea{
       </button>
     </div>
 
-    <div v-for="(e,i) in selectedProject.entries" :key="e.id" class="entry">
-      <div class="entry-top">
-        <strong>{{formatDate(e.start)}}</strong>
-        <button class="entry-delete" @click="deleteEntry(i)">🗑️</button>
-      </div>
-      <span
-        style="cursor:pointer;text-decoration:underline"
-        @click="openEditDuration(e)"
-      >
-<div v-if="editDurationEntry === e"
-     style="margin-top:.4rem">
+<div v-for="(e,i) in selectedProject.entries" :key="e.id" class="entry">
 
-  <input type="number"
-         step="0.25"
-         min="0"
-         v-model.number="editDurationHours"
-         style="width:90px;padding:.3rem">
+  <div class="entry-top">
+    <strong>
+      {{ new Date(e.start).toLocaleDateString('de-DE') }}
+    </strong>
+    <button class="entry-delete" @click="deleteEntry(i)">🗑️</button>
+  </div>
 
-  <button @click="saveEditedDuration"
-          style="margin-left:.4rem">
-    ✓
-  </button>
+  <div style="margin:.4rem 0; display:flex; gap:.6rem; align-items:center">
+
+    <input type="time"
+           :value="formatTime(e.start)"
+           @input="val => {
+             const d = new Date(e.start);
+             const [h,m] = val.target.value.split(':');
+             d.setHours(h,m);
+             e.start = d.toISOString();
+             updateDuration(e);
+           }">
+
+    <span>–</span>
+
+    <input type="time"
+           :value="formatTime(e.end)"
+           @input="val => {
+             const d = new Date(e.end);
+             const [h,m] = val.target.value.split(':');
+             d.setHours(h,m);
+             e.end = d.toISOString();
+             updateDuration(e);
+           }">
+
+  </div>
+
+<div style="font-weight:500;font-size: 0.9rem;">
+  <span v-if="e.paused && e.paused > 0">
+     - {{ Math.floor(e.paused / 60) }} min Pause
+  </span>
 </div>
 
-<span v-else
-      style="cursor:pointer;text-decoration:underline"
-      @click="openEditDuration(e)">
-  ⏱ {{(e.duration/3600).toFixed(2)}} h
-</span>
-      </span>
-      <textarea v-model="e.note" @change="save"></textarea>
-    </div>
-    <hr style="margin:1.4rem 0">
+
+<div style="font-weight:600">
+ = {{ (e.duration / 3600).toFixed(2) }} h
+</div>
+
+  <textarea v-model="e.note" @change="save"></textarea>
+
+</div>
 
 <h3 style="margin:.4rem 0">☑️ To-Dos</h3>
 
@@ -404,59 +466,48 @@ createApp({
       running: false,
       startTime: null,
       timer: null,
-      elapsed: 0,
+      elapsed: 0,           // aktive Zeit in Sekunden
+      paused: false,
+      pauseStart: null,     // Timestamp wenn Pause beginnt
+      pausedTime: 0,        // kumulierte Pausenzeit
       showNote: false,
       note: '',
-      editDurationEntry: null,
-      editDurationHours: 0,
-      users: ["Bennet", "Dennis", "Till", "Nicole", "Patrick",],
+      users: ["Bennet", "Dennis", "Till", "Nicole", "Patrick"],
       selectedUser: localStorage.getItem("selectedUser") || "",
       selectedDay: null,
-
-
-
     }
   },
 
-computed: {
-  formattedTime() {
-    const s = Math.floor(this.elapsed);
-    return (
-      String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
-      String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' +
-      String(s % 60).padStart(2, '0')
-    );
-  },
+  computed: {
+    formattedTime() {
+      const s = Math.floor(this.elapsed);
+      return (
+        String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
+        String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' +
+        String(s % 60).padStart(2, '0')
+      );
+    },
 
-  daysOverview() {
-    const map = {};
-
-    this.projects.forEach(p => {
-      p.entries.forEach(e => {
-        const day = e.start.slice(0, 10); // YYYY-MM-DD
-
-        if (!map[day]) {
-          map[day] = {
-            date: day,
-            seconds: 0
-          };
-        }
-
-        map[day].seconds += e.duration;
+    daysOverview() {
+      const map = {};
+      this.projects.forEach(p => {
+        p.entries.forEach(e => {
+          const day = e.start.slice(0, 10);
+          if (!map[day]) map[day] = { date: day, seconds: 0 };
+          map[day].seconds += e.duration;
+        });
       });
-    });
+      return Object.values(map).sort((a, b) => b.date.localeCompare(a.date));
+    },
 
-    return Object.values(map)
-      .sort((a, b) => b.date.localeCompare(a.date));
-  },
-  dayDetail() {
+dayDetail() {
   if (!this.selectedDay) return null;
 
   const projectsMap = {};
   let totalSeconds = 0;
 
   this.projects.forEach(p => {
-    p.entries.forEach(e => {
+    (p.entries || []).forEach(e => {
       const day = e.start.slice(0, 10);
       if (day !== this.selectedDay) return;
 
@@ -469,12 +520,20 @@ computed: {
         };
       }
 
-      projectsMap[p.id].seconds += e.duration;
-      totalSeconds += e.duration;
-
+      projectsMap[p.id].seconds += e.duration || 0;
+      totalSeconds += e.duration || 0;
       projectsMap[p.id].entries.push(e);
     });
   });
+
+  // Wenn es keine Einträge gibt, trotzdem leeres Modal erzeugen
+  if (Object.keys(projectsMap).length === 0) {
+    return {
+      date: this.selectedDay,
+      totalSeconds: 0,
+      projects: []
+    };
+  }
 
   return {
     date: this.selectedDay,
@@ -482,60 +541,105 @@ computed: {
     projects: Object.values(projectsMap)
   };
 }
+  },
+ 
 
-},
-
-
-    watch: {
+  watch: {
     selectedUser(newVal) {
+      if (newVal) localStorage.setItem("selectedUser", newVal);
+    },
+    showNote(newVal) {
       if (newVal) {
-        localStorage.setItem("selectedUser", newVal);
+        this.$nextTick(() => {
+          if (this.$refs.noteField) this.$refs.noteField.focus();
+        });
       }
     }
   },
 
-
   methods: {
+start() {
+  if (!this.selectedProjectId) return alert("Bitte Projekt wählen");
+  // Timer starten
+  this.running = true;
+  this.paused = false;
+  this.startTime = new Date();
+  this.timer = setInterval(() => {
+    this.elapsed += 1;
+  }, 1000);
+},
 
-    start() {
-      if (!this.selectedProjectId) return alert("Projekt wählen");
-      this.running = true;
-      this.startTime = Date.now();
-      this.timer = setInterval(() => {
-        this.elapsed = (Date.now() - this.startTime) / 1000;
-      }, 1000);
-    },
+pause() {
+  if (!this.running || this.paused) return;
+  clearInterval(this.timer);
+  this.paused = true;
+  this.pauseStart = new Date();
+},
 
-    stop() {
-      clearInterval(this.timer);
-      this.running = false;
-      this.showNote = true;
-    },
+resume() {
+  if (!this.running || !this.paused) return;
+  this.paused = false;
+  if (this.pauseStart) {
+    const pauseDuration = (new Date() - this.pauseStart) / 1000;
+    this.pausedTime += pauseDuration;
+    this.pauseStart = null;
+  }
+  this.timer = setInterval(() => {
+    this.elapsed += 1;
+  }, 1000);
+},
 
-    saveEntry() {
-      const p = this.projects.find(p => p.id === this.selectedProjectId);
-      p.entries.unshift({
-        id: crypto.randomUUID(),
-        start: new Date().toISOString(),
-        duration: this.elapsed,
-        note: this.note,
-        exported: false
-      });
-      p.total += this.elapsed;
-      this.resetAfterSave();
-    },
+stop() {
+  if (!this.running) return;
+  clearInterval(this.timer);
+  this.running = false;
+  this.paused = false;
 
-    skipNote() {
-      this.note = '';
-      this.saveEntry();
-    },
+  // Falls gerade pausiert: Pause addieren
+  if (this.pauseStart) {
+    this.pausedTime += (new Date() - this.pauseStart) / 1000;
+    this.pauseStart = null;
+  }
 
-    resetAfterSave() {
-      this.elapsed = 0;
-      this.note = '';
-      this.showNote = false;
-      this.save();
-    },
+  this.showNote = true; // Modal anzeigen, NICHT speichern
+},
+
+saveEntry() {
+  if (!this.selectedProjectId) return alert("Projekt wählen");
+  if (this.elapsed <= 0) return alert("Keine Zeit gemessen");
+
+  const project = this.projects.find(p => p.id === this.selectedProjectId);
+  if (!project) return alert("Projekt nicht gefunden");
+
+  const end = new Date();
+  const start = new Date(end.getTime() - (this.elapsed + this.pausedTime) * 1000);
+
+  const entry = {
+    id: crypto.randomUUID(),
+    start: start.toISOString(),
+    end: end.toISOString(),
+    duration: this.elapsed,     // aktive Zeit
+    paused: this.pausedTime,    // Pause separat speichern
+    note: this.note || "",
+    exported: false
+  };
+
+  project.entries.unshift(entry);
+  project.total = project.entries.reduce((sum, e) => sum + e.duration, 0);
+
+  this.save();
+
+  // Reset Timer & Modal
+  this.elapsed = 0;
+  this.pausedTime = 0;
+  this.note = "";
+  this.showNote = false;
+},
+
+skipNote() {
+  this.note = "";
+  this.showNote = false;
+},
 
     addProject() {
       const name = prompt("Projektname");
@@ -551,19 +655,7 @@ computed: {
       this.save();
     },
 
-    openProject(p) {
-      if (!p.todos) p.todos = [];   // ✅ Fallback
-      this.selectedProject = p;
-    },
-
-    deleteEntry(i) {
-      const e = this.selectedProject.entries[i];
-      this.selectedProject.total -= e.duration;
-      this.selectedProject.entries.splice(i, 1);
-      this.save();
-    },
-
-    deleteProject() {
+        deleteProject() {
       if (!confirm("Projekt wirklich löschen?")) return;
       const index = this.projects.findIndex(p => p.id === this.selectedProject.id);
       if (index === -1) return;
@@ -572,52 +664,31 @@ computed: {
       this.selectedProjectId = '';
       this.save();
     },
-    addTodo() {
-  this.selectedProject.todos.unshift({
-    id: crypto.randomUUID(),
-    text: "",
-    done: false
-  });
-  this.save();
-  },
 
-  deleteTodo(i) {
-    this.selectedProject.todos.splice(i, 1);
-    this.save();
-  },
+    openProject(p) {
+      this.selectedProject = p;
+      if (!p.entries) p.entries = [];
+      if (!p.todos) p.todos = [];
+    },
 
-openEditDuration(entry) {
-  this.editDurationEntry = entry;
-  this.editDurationHours = +(entry.duration / 3600).toFixed(2);
-},
+    save() {
+      localStorage.setItem('projects', JSON.stringify(this.projects));
+    },
+    updateDuration(entry) {
+  const start = new Date(entry.start);
+  const end = new Date(entry.end);
 
-saveEditedDuration() {
-  const entry = this.editDurationEntry;
-  const project = this.selectedProject;
+  // Dauer in Sekunden berechnen
+entry.duration = Math.max(0, Math.round((end - start)/1000) - (entry.paused || 0));
 
-  project.total -= entry.duration;
-  entry.duration = Math.round(this.editDurationHours * 3600);
-  project.total += entry.duration;
+  // Projekt-Total neu berechnen
+  const project = this.projects.find(p => p.entries.includes(entry));
+  if (project) {
+    project.total = project.entries.reduce((sum, e) => sum + e.duration, 0);
+  }
 
-  this.editDurationEntry = null;
   this.save();
 },
-formatDay(isoDay) {
-  const d = new Date(isoDay);
-  return d.toLocaleDateString('de-DE', {
-    weekday: 'short',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-},
-openDay(day) {
-  this.selectedDay = day;
-},
-
-
-
-
 
 async exportAll() {
 
@@ -674,15 +745,19 @@ async exportAll() {
   }
 },
 
-    formatDate(iso) {
+
+    formatTime(iso) {
       const d = new Date(iso);
-      return d.toLocaleDateString('de-DE') + ' ' +
-        d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     },
 
-    save() {
-      localStorage.setItem('projects', JSON.stringify(this.projects));
-    }
+    formatDay(isoDay) {
+      const d = new Date(isoDay);
+      return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+    },
+    openDay(day) {
+  this.selectedDay = day;
+},
   }
 }).mount('#app');
 </script>
