@@ -309,9 +309,7 @@ textarea{
              updateDuration(e);
            }">
 
-  </div>
-
-<div style="font-weight:500;font-size: 0.9rem;">
+           <div style="font-weight:500;font-size: 0.9rem;">
   <span v-if="e.paused && e.paused > 0">
      - {{ Math.floor(e.paused / 60) }} min Pause
   </span>
@@ -321,6 +319,10 @@ textarea{
 <div style="font-weight:600">
  = {{ (e.duration / 3600).toFixed(2) }} h
 </div>
+
+  </div>
+
+
 
   <textarea v-model="e.note" @change="save"></textarea>
 
