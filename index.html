@@ -198,7 +198,7 @@ textarea{
     <div class="top-area">
       <select class="project-select" v-model="selectedProjectId">
         <option disabled value="">Projekt auswählen</option>
-        <option v-for="p in projects" :value="p.id">{{p.name}}</option>
+        <option v-for="p in projects" :value="String(p.id)">{{p.name}}</option>
       </select>
       <div class="timer">{{formattedTime}}</div>
     </div>
@@ -258,7 +258,18 @@ textarea{
     {{ u }}
   </option>
 </select>
+<div v-if="lastExport"
+     style="margin-top:1rem;
+            font-size:.85rem;
+            color:#666;
+            text-align:center;">
 
+  Zuletzt exportiert am
+  {{ new Date(lastExport).toLocaleDateString('de-DE') }}
+  um
+  {{ new Date(lastExport).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) }}
+
+</div>
 </div>
 
 <!-- PROJECT DETAIL -->
@@ -521,7 +532,7 @@ textarea{
 </div>
 
 <script>
-const EXPORT_URL = "https://script.google.com/macros/s/AKfycbx8RQGWRNP2fagujXfUly4lB0clt-ZY8Yl6ILO4pMlNEoGRa8c73arzXtConVKCxx1jhQ/exec";
+const EXPORT_URL = "https://script.google.com/macros/s/AKfycbybPVsyCMPSffBkGEx6zKn7QzP5-JS8VdsyCGlUTgT8mcB1P2pZs4VU3JexYkmYipiRYA/exec";
                     
 const { createApp } = Vue;
 
@@ -530,22 +541,23 @@ createApp({
     return {
       tab: 'home',
       projects: JSON.parse(localStorage.getItem('projects') || '[]'),
-      selectedProjectId: '',
+      selectedProjectId: localStorage.getItem('selectedProjectId') || '',
       selectedProject: null,
-      running: false,
-      startTime: null,
       timer: null,
       elapsed: 0,           // aktive Zeit in Sekunden
-      paused: false,
-      pauseStart: null,     // Timestamp wenn Pause beginnt
-      pausedTime: 0,        // kumulierte Pausenzeit
       showNote: false,
       note: '',
       users: ["Bennet", "Dennis", "Till", "Nicole", "Patrick"],
       selectedUser: localStorage.getItem("selectedUser") || "",
       selectedDay: null,
       dailyAdjustments: JSON.parse(localStorage.getItem('dailyAdjustments') || '{}'),
-
+      lastExport: localStorage.getItem('lastExport') || null,
+      running: JSON.parse(localStorage.getItem('timerRunning') || 'false'),
+      startTime: JSON.parse(localStorage.getItem('timerStart') || 'null'),
+      paused: JSON.parse(localStorage.getItem('timerPaused') || 'false'),
+      pausedTime: JSON.parse(localStorage.getItem('timerPausedTime') || '0'),
+      pauseStart: JSON.parse(localStorage.getItem('timerPauseStart') || 'null'),
+      exportedAdjustments: JSON.parse(localStorage.getItem('exportedAdjustments') || '{}'),
     }
   },
 
@@ -630,6 +642,9 @@ dayDetail() {
     selectedUser(newVal) {
       if (newVal) localStorage.setItem("selectedUser", newVal);
     },
+    selectedProjectId(newVal) {
+    localStorage.setItem('selectedProjectId', newVal || '');
+  },
     showNote(newVal) {
       if (newVal) {
         this.$nextTick(() => {
@@ -638,6 +653,26 @@ dayDetail() {
       }
     }
   },
+  
+
+  mounted() {
+  if (this.running && this.startTime) {
+
+    if (this.paused && this.pauseStart) {
+      this.pausedTime += (Date.now() - this.pauseStart) / 1000;
+      this.pauseStart = null;
+      localStorage.setItem('timerPausedTime', this.pausedTime);
+      localStorage.removeItem('timerPauseStart');
+    }
+
+    this.timer = setInterval(() => {
+      const now = Date.now();
+      this.elapsed = Math.floor(
+        (now - this.startTime - this.pausedTime * 1000) / 1000
+      );
+    }, 1000);
+  }
+},
 
   methods: {
 start() {
@@ -654,6 +689,11 @@ start() {
     const now = Date.now();
     this.elapsed = Math.floor((now - this.startTime - this.pausedTime * 1000) / 1000);
   }, 1000);
+  localStorage.setItem('timerRunning', true);
+localStorage.setItem('timerStart', this.startTime);
+localStorage.setItem('timerPaused', false);
+localStorage.setItem('timerPausedTime', 0);
+localStorage.removeItem('timerPauseStart');
 },
 
 pause() {
@@ -662,6 +702,8 @@ pause() {
   clearInterval(this.timer);
   this.paused = true;
   this.pauseStart = Date.now();
+  localStorage.setItem('timerPaused', true);
+localStorage.setItem('timerPauseStart', this.pauseStart);
 },
 
 resume() {
@@ -678,6 +720,9 @@ resume() {
     const now = Date.now();
     this.elapsed = Math.floor((now - this.startTime - this.pausedTime * 1000) / 1000);
   }, 1000);
+  localStorage.setItem('timerPaused', false);
+localStorage.setItem('timerPausedTime', this.pausedTime);
+localStorage.removeItem('timerPauseStart');
 },
 
 stop() {
@@ -693,34 +738,50 @@ stop() {
   }
 
   this.showNote = true; // Modal anzeigen, NICHT speichern
+  localStorage.removeItem('timerRunning');
+localStorage.removeItem('timerStart');
+localStorage.removeItem('timerPaused');
+localStorage.removeItem('timerPausedTime');
+localStorage.removeItem('timerPauseStart');
 },
 
 saveEntry() {
   if (!this.selectedProjectId) return alert("Projekt wählen");
   if (this.elapsed <= 0) return alert("Keine Zeit gemessen");
 
-  const project = this.projects.find(p => p.id === this.selectedProjectId);
-  if (!project) return alert("Projekt nicht gefunden");
+  const project = this.projects.find(
+    p => String(p.id) === String(this.selectedProjectId)
+  );
+
+  if (!project) {
+    alert("Projekt nicht gefunden");
+    return;
+  }
 
   const end = new Date();
-  const start = new Date(end.getTime() - (this.elapsed + this.pausedTime) * 1000);
+  const start = new Date(
+    end.getTime() - (this.elapsed + this.pausedTime) * 1000
+  );
 
   const entry = {
     id: crypto.randomUUID(),
     start: start.toISOString(),
     end: end.toISOString(),
-    duration: this.elapsed,     // aktive Zeit
-    paused: this.pausedTime,    // Pause separat speichern
+    duration: this.elapsed,
+    paused: this.pausedTime,
     note: this.note || "",
     exported: false
   };
 
   project.entries.unshift(entry);
-  project.total = project.entries.reduce((sum, e) => sum + e.duration, 0);
+  project.total = project.entries.reduce(
+    (sum, e) => sum + e.duration,
+    0
+  );
 
   this.save();
 
-  // Reset Timer & Modal
+  // Reset
   this.elapsed = 0;
   this.pausedTime = 0;
   this.note = "";
@@ -750,7 +811,7 @@ skipNote() {
       const name = prompt("Projektname");
       if (!name) return;
       this.projects.push({
-        id: Date.now(),
+        id: String(Date.now()),
         name,
         entries: [],
         todos: [],
@@ -848,10 +909,16 @@ async exportAll() {
   try {
     const res = await fetch(EXPORT_URL, {
   method: "POST",
-  body: JSON.stringify({
-    user: this.selectedUser,
-    projects: data
-  })
+body: JSON.stringify({
+  user: this.selectedUser,
+  projects: data,
+  dailyAdjustments: Object.fromEntries(
+    Object.entries(this.dailyAdjustments)
+      .filter(([date, value]) =>
+        value !== 0 && !this.exportedAdjustments[date]
+      )
+  )
+})
 });
 
 
@@ -864,9 +931,24 @@ async exportAll() {
         if (o) o.exported = true;
       });
     });
+    // Überstunden als exportiert markieren
+Object.keys(this.dailyAdjustments).forEach(date => {
+  if (this.dailyAdjustments[date] !== 0) {
+    this.exportedAdjustments[date] = true;
+  }
+});
+
+localStorage.setItem(
+  'exportedAdjustments',
+  JSON.stringify(this.exportedAdjustments)
+);
 
     this.save();
     alert("Export erfolgreich ✅");
+
+    const now = new Date().toISOString();
+    localStorage.setItem('lastExport', now);
+    this.lastExport = now;
 
   } catch (err) {
     console.error(err);
