@@ -106,8 +106,8 @@ nav button.active{
   
 }
 .project-item::before{
-  content:"";position:absolute;left:0;top:12%;bottom:12%;
-  width:8px;border-radius:8px;background:var(--accent)
+  content:"";position:absolute;left:0;top:0%;bottom:0%;padding: 0.1rem;
+  width:8px;border-bottom-left-radius: 20px; border-top-left-radius: 20px ;background:var(--accent)
 }
 
 /* MODAL */
@@ -136,10 +136,10 @@ textarea{
   font-size:1rem
 }
 
-.entry{border-bottom:1px solid #eee;padding:.9rem 0}
+.entry{background-color:#e4e4e4a2;border-radius:20px;padding:.9rem; margin-bottom:1rem}
 .entry-top{display:flex;justify-content:space-between;align-items:center}
 .entry-delete{
-  border:none;background:#eee;border-radius:50%;
+  border:none;background:#c0c0c05b;border-radius:50%;
   width:32px;height:32px
 }
 
@@ -290,7 +290,9 @@ textarea{
 <div v-for="(e,i) in selectedProject.entries" :key="e.id" class="entry">
 
   <div class="entry-top">
-<input type="date"
+<!-- WENN NICHT EXPORTIERT -->
+<input v-if="!e.exported"
+       type="date"
        :value="e.start.slice(0,10)"
        @input="val => {
          const newDate = val.target.value;
@@ -298,7 +300,6 @@ textarea{
          const end = new Date(e.end);
 
          const [year,month,day] = newDate.split('-');
-
          start.setFullYear(year, month-1, day);
          end.setFullYear(year, month-1, day);
 
@@ -308,32 +309,51 @@ textarea{
          updateDuration(e);
        }"
        style="font-weight:600;border:none;background:transparent">
+
+<!-- WENN EXPORTIERT -->
+<div v-else style="font-weight:600">
+  {{ formatDay(e.start.slice(0,10)) }}
+</div>
     <button class="entry-delete" @click="deleteEntry(i)">🗑️</button>
   </div>
 
   <div style="margin:.4rem 0; display:flex; gap:.6rem; align-items:center">
 
-    <input type="time"
-           :value="formatTime(e.start)"
-           @input="val => {
-             const d = new Date(e.start);
-             const [h,m] = val.target.value.split(':');
-             d.setHours(h,m);
-             e.start = d.toISOString();
-             updateDuration(e);
-           }">
+<!-- START -->
+<template v-if="!e.exported">
+  <input type="time"
+         :value="formatTime(e.start)"
+         @input="val => {
+           const d = new Date(e.start);
+           const [h,m] = val.target.value.split(':');
+           d.setHours(h,m);
+           e.start = d.toISOString();
+           updateDuration(e);
+         }">
+</template>
 
-    <span>–</span>
+<template v-else>
+  <span>{{ formatTime(e.start) }}</span>
+</template>
 
-    <input type="time"
-           :value="formatTime(e.end)"
-           @input="val => {
-             const d = new Date(e.end);
-             const [h,m] = val.target.value.split(':');
-             d.setHours(h,m);
-             e.end = d.toISOString();
-             updateDuration(e);
-           }">
+<span>–</span>
+
+<!-- END -->
+<template v-if="!e.exported">
+  <input type="time"
+         :value="formatTime(e.end)"
+         @input="val => {
+           const d = new Date(e.end);
+           const [h,m] = val.target.value.split(':');
+           d.setHours(h,m);
+           e.end = d.toISOString();
+           updateDuration(e);
+         }">
+</template>
+
+<template v-else>
+  <span>{{ formatTime(e.end) }}</span>
+</template>
 
            <div style="font-weight:500;font-size: 0.9rem;">
   <span v-if="e.paused && e.paused > 0">
@@ -350,7 +370,14 @@ textarea{
 </div>
 
 
-  <textarea v-model="e.note" @change="save"></textarea>
+  <textarea v-if="!e.exported"
+          v-model="e.note"
+          @change="save"></textarea>
+
+<div v-else
+     style="white-space:pre-wrap;color:#444;padding:.4rem 0">
+  {{ e.note }}
+</div>
 
 </div>
 
@@ -404,14 +431,25 @@ textarea{
 
     <div style="margin-bottom:1rem">
   <label style="font-size:.9rem">Über-/Minusstunden</label>
-  <input type="number"
-         step="0.25"
-         :value="dailyAdjustments[dayDetail.date] || 0"
-         @input="val => {
-           dailyAdjustments[dayDetail.date] = parseFloat(val.target.value) || 0;
-           save();
-         }"
-         style="width:100%;padding:.4rem;margin-top:.4rem">
+<input v-if="!exportedAdjustments[dayDetail.date]"
+       type="number"
+       step="0.25"
+       :value="dailyAdjustments[dayDetail.date] || 0"
+       @input="val => {
+         dailyAdjustments[dayDetail.date] =
+           parseFloat(val.target.value) || 0;
+         save();
+       }"
+       style="width:100%;padding:.4rem;margin-top:.4rem">
+<div v-else
+     style="margin-top:.4rem;font-weight:600;
+            color: dailyAdjustments[dayDetail.date] > 0 ? 'green' : 'red'">
+
+  {{ dailyAdjustments[dayDetail.date] > 0 ? '+' : '' }}
+  {{ dailyAdjustments[dayDetail.date].toFixed(2) }} h
+
+
+</div>
 </div>
 
 
@@ -430,7 +468,10 @@ textarea{
       top: '0%',
       bottom: '0%',
       width: '8px',
+      borderBottomLeftRadius: '8px',
+      borderTopLeftRadius: '8px',
       background: p.color
+
     }">
   </span>
 
@@ -480,11 +521,11 @@ textarea{
     border:1px solid var(--border);
     text-align:center;
     font-weight:700;
-    font-size:1.1rem;
+    font-size:0.9rem;
   "
   :style="{ color: totalAdjustment > 0 ? 'green' : (totalAdjustment < 0 ? 'red' : 'inherit') }"
 >
-  Gesamtsaldo:
+  Über-/Minusstunden Gesamt:
   {{ totalAdjustment > 0 ? '+' : '' }}
   {{ totalAdjustment.toFixed(2) }} h
 </div>
