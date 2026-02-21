@@ -243,7 +243,7 @@ textarea{
   width:70px;
   height:70px;
   border-radius:50%;
-  font-size:2rem;     /* ⬅ größer */
+  font-size:1rem;     /* ⬅ größer */
   display:flex;
   align-items:center;
   justify-content:center;
@@ -288,7 +288,7 @@ textarea{
           @click="paused ? resume() : pause()"
           class="pause-btn icon-btn">
 
-    <span v-if="!paused">⏸</span>
+    <span v-if="!paused">Pause</span>
     <span v-else>▶</span>
 
   </button>
