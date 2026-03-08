@@ -24,6 +24,11 @@ body{
   color:var(--text);
   overscroll-behavior:none;
 }
+body.modal-open{
+  overflow:hidden;
+  position:fixed;
+  width:100%;
+}
 
 /* ── NAV ── */
 nav{
@@ -513,6 +518,9 @@ createApp({
   },
 
   computed: {
+    isModalOpen() {
+      return !!(this.selectedProject || this.selectedDay || this.showNote);
+    },
     totalAdjustment() {
       return Object.values(this.dailyAdjustments).reduce((s,v)=>s+v,0);
     },
@@ -554,6 +562,18 @@ createApp({
   watch: {
     selectedUser(v)      { if(v) localStorage.setItem('selectedUser',v); },
     selectedProjectId(v) { localStorage.setItem('selectedProjectId',v||''); },
+    // Body-Scroll sperren wenn ein Modal offen ist
+    isModalOpen(v) {
+      if (v) {
+        this._scrollY = window.scrollY;
+        document.body.classList.add('modal-open');
+        document.body.style.top = `-${this._scrollY}px`;
+      } else {
+        document.body.classList.remove('modal-open');
+        document.body.style.top = '';
+        window.scrollTo(0, this._scrollY || 0);
+      }
+    }
   },
 
   mounted() {
