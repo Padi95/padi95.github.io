@@ -2,13 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Zeiterfassung</title>
-
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-
 <style>
 :root{
   --bg:#c0d2d392;
@@ -18,252 +16,253 @@
   --accent:#427da1;
   --danger:#c94a4a;
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
   margin:0;
   font-family:'Inter',system-ui,sans-serif;
   background:var(--bg);
   color:var(--text);
+  overscroll-behavior:none;
 }
 
-/* NAV */
-nav{display:flex;background:#1f1f1f}
+/* ── NAV ── */
+nav{
+  display:flex;background:#1f1f1f;
+  position:sticky;top:0;z-index:10;
+}
 nav button{
-  flex:1;padding:1.2rem;border:none;background:none;
-  color:#aaa;font-size:1.1rem
+  flex:1;padding:1.1rem .4rem;border:none;background:none;
+  color:#aaa;font-size:.92rem;font-family:inherit;
+  transition:color .2s;cursor:pointer;
 }
-nav button.active{
-  color:#fff;border-bottom:8px solid var(--accent)
-}
+nav button.active{color:#fff;border-bottom:3px solid var(--accent)}
 
-/* PAGE */
+/* ── PAGE ── */
 .page{
-  min-height:calc(100vh - 56px);
-  padding:1.4rem;
-  display:flex;
-  flex-direction:column;
+  min-height:calc(100vh - 52px);
+  padding:1.2rem 1rem 5rem;
+  display:flex;flex-direction:column;
 }
 
-/* HOME */
+/* ── HOME ── */
 .timer-wrapper{flex:1;display:flex;flex-direction:column;align-items:center}
 .top-area{width:100%;max-width:380px}
-
 .project-select{
-  width:100%;font-size:1.3rem;padding:1rem;
+  width:100%;font-size:1.2rem;padding:.9rem 1rem;
   border-radius:18px;border:1px solid var(--border);
-  background-color: #ffffff;
-  text-align:center;font-weight:700
+  background:#fff;text-align:center;font-weight:700;font-family:inherit;
 }
-
 .timer{
-  margin-top:1.6rem;
-  width:100%;
-  text-align:center;
+  margin-top:1.4rem;width:100%;text-align:center;
   font-family:"Courier New",monospace;
   font-size:clamp(2.4rem,10vw,3.6rem);
-  line-height:1.3;
-  padding:1.6rem .6rem;
-  border-radius:28px;
-  background:#fafafa;
-  border:2px solid var(--border);
+  line-height:1.3;padding:1.4rem .6rem;
+  border-radius:28px;background:#fafafa;border:2px solid var(--border);
 }
-
 .flex-spacer{flex:1}
-
-/* MAIN BUTTON */
 .main-btn{
-  width:220px;height:220px;border-radius:50%;
-  border:none;font-size:1.5rem;font-weight:800;
+  width:200px;height:200px;border-radius:50%;
+  border:none;font-size:1.4rem;font-weight:800;
   color:#fff;background:var(--accent);
-  box-shadow:0 14px 30px rgba(0,0,0,.18);
-  margin-bottom:4rem;
-  margin-top: 2rem;
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+  margin-bottom:3rem;margin-top:1.6rem;
+  transition:background .2s,transform .1s;cursor:pointer;
 }
-.main-btn.stop{
-  background:var(--danger);
-  animation:pulse 1.4s infinite
-}
+.main-btn:active{transform:scale(.96)}
+.main-btn.stop{background:var(--danger);animation:pulse 1.4s infinite}
 @keyframes pulse{
   0%{box-shadow:0 0 0 0 rgba(201,74,74,.6)}
   70%{box-shadow:0 0 0 22px rgba(201,74,74,0)}
   100%{box-shadow:0 0 0 0 rgba(201,74,74,0)}
 }
-.todo-section {
-  margin-top: 1.2rem;
+.pause-container{
+  height:56px;display:flex;align-items:flex-start;
+  justify-content:center;margin-top:1rem;margin-bottom:1.8rem;
 }
-
-.todo-item {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:.8rem .6rem;
-  border-radius:10px;
-  background:#f6f6f6;
-  margin-bottom:.5rem;
+.pause-btn{
+  padding:.9rem 2.4rem;border-radius:14px;
+  border:1px solid var(--border);background:#fff;
+  font-weight:600;font-family:inherit;font-size:1rem;cursor:pointer;
+  transition:background .15s;
 }
+.pause-btn:active{background:#f0f0f0}
 
-.todo-left {
-  display:flex;
-  align-items:center;
-  gap:.8rem;
-  flex:1;
-  cursor:pointer;
+/* ── TODO ── */
+.todo-section{margin-top:1.2rem}
+.todo-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.75rem .6rem;border-radius:10px;background:#f6f6f6;margin-bottom:.5rem;
 }
+.todo-left{display:flex;align-items:center;gap:.8rem;flex:1;cursor:pointer}
+.todo-checkbox{width:22px;height:22px;border:2px solid #999;border-radius:6px;flex-shrink:0;transition:.2s}
+.todo-checkbox.done{background:#111;border-color:#111}
+.todo-left span.done{text-decoration:line-through;opacity:.6}
+.todo-delete{border:none;background:none;font-size:1.1rem;color:#999;cursor:pointer;padding:.4rem}
+.todo-input-row{display:flex;gap:.5rem;margin-top:.8rem}
+.todo-input-row input{flex:1;padding:.65rem .8rem;border-radius:8px;border:1px solid #ddd;font-size:1rem;font-family:inherit}
+.todo-input-row button{width:44px;border:none;border-radius:8px;background:#111;color:white;font-size:1.3rem;cursor:pointer}
 
-.todo-checkbox {
-  width:22px;
-  height:22px;
-  border:2px solid #999;
-  border-radius:6px;
-  transition:.2s;
-}
-
-.todo-checkbox.done {
-  background:#111;
-  border-color:#111;
-}
-
-.todo-left span.done {
-  text-decoration:line-through;
-  opacity:.6;
-}
-
-.todo-delete {
-  border:none;
-  background:none;
-  font-size:1.1rem;
-  color:#999;
-  cursor:pointer;
-}
-
-.todo-input-row {
-  display:flex;
-  gap:.5rem;
-  margin-top:.8rem;
-}
-
-.todo-input-row input {
-  flex:1;
-  padding:.6rem;
-  border-radius:8px;
-  border:1px solid #ddd;
-}
-
-.todo-input-row button {
-  width:42px;
-  border:none;
-  border-radius:8px;
-  background:#111;
-  color:white;
-  font-size:1.2rem;
-  cursor:pointer;
-}
-
-/* PROJECT LIST */
+/* ── PROJECT LIST ── */
 .project-item{
-  position:relative;
-  background:#fff;
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
-  border-top-right-radius: 20px;
-  border-bottom-right-radius: 20px;
-  padding:0.6rem 0.6rem 0.6rem 1.5rem;
-  margin-bottom:1.1rem;
-  font-size:1rem;
-  font-weight:700;
-}
-.project-item span{
-  display:block;margin-top:.4rem;font-size:0.75rem
-  
+  position:relative;background:#fff;
+  border-radius:8px 20px 20px 8px;
+  padding:.65rem .65rem .65rem 1.5rem;
+  margin-bottom:1rem;font-size:1rem;font-weight:700;
+  cursor:pointer;
 }
 .project-item::before{
-  content:"";position:absolute;left:0px;top:0%;bottom:0%;
-  width:8px;border-bottom-left-radius: 20px; border-top-left-radius: 20px ;background:var(--accent)
+  content:"";position:absolute;left:0;top:0;bottom:0;
+  width:8px;border-radius:8px 0 0 8px;background:var(--accent);
+}
+.project-item span{display:block;margin-top:.3rem;font-size:.75rem;font-weight:400}
+
+/* Ghost: schwebt über allem */
+.drag-ghost{
+  position:fixed;pointer-events:none;z-index:2000;
+  border-radius:8px 20px 20px 8px;
+  background:#fff;
+  box-shadow:0 10px 32px rgba(0,0,0,.22);
+  display:flex;align-items:center;
+  padding:.65rem .65rem .65rem 1.5rem;
+  overflow:hidden;
+}
+.drag-ghost::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;
+  width:8px;border-radius:8px 0 0 8px;background:var(--accent);
+}
+.drag-ghost-name{
+  font-size:1rem;font-weight:700;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Placeholder: zeigt wo das Element landen wird */
+.drag-placeholder{
+  margin-bottom:1rem;
+  border-radius:8px 20px 20px 8px;
+  border:2px dashed var(--accent);
+  background:rgba(66,125,161,.07);
 }
 
-/* MODAL */
+.drag-handle{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  cursor:grab;font-size:20px;opacity:.4;user-select:none;touch-action:none;padding:.4rem;
+}
+.drag-handle:active{cursor:grabbing;opacity:1}
+
+/* ── MODAL ── */
 .modal{
   position:fixed;inset:0;
-  background:rgba(0,0,0,.45);
-  display:flex;justify-content:center;align-items:center;
-  z-index:20
+  background:rgba(0,0,0,.5);
+  display:flex;justify-content:center;align-items:flex-end;
+  z-index:30;
+  animation:fadeIn .18s ease;
 }
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .modal-card{
-  position:relative;background:#fff;width:92%;
-  max-width:480px;border-radius:24px;
-  padding:1.6rem 1.4rem;
-  max-height:85vh;overflow-y:auto
+  position:relative;background:#fff;width:100%;
+  max-width:540px;border-radius:24px 24px 0 0;
+  padding:1.2rem 1.2rem calc(2rem + env(safe-area-inset-bottom));
+  max-height:92vh;overflow-y:auto;
+  animation:slideUp .22s ease;
+}
+@media(min-width:560px){
+  .modal{align-items:center}
+  .modal-card{border-radius:24px;max-height:86vh;margin:1rem;padding:1.4rem 1.4rem 2rem}
+}
+@keyframes slideUp{from{transform:translateY(28px);opacity:.5}to{transform:translateY(0);opacity:1}}
+.modal-card::before{
+  content:"";display:block;width:40px;height:4px;border-radius:2px;
+  background:#ddd;margin:0 auto .8rem;
 }
 .modal-close{
-  position:absolute;top:.7rem;right:.7rem;
-  width:36px;height:36px;border-radius:50%;
-  background:#999;color:#fff;border:none;
-  font-size:1.3rem;font-weight:700
+  position:absolute;top:.9rem;right:.9rem;
+  width:34px;height:34px;border-radius:50%;
+  background:#ebebeb;color:#555;border:none;
+  font-size:1.2rem;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
 }
+.modal-close:active{background:#d5d5d5}
+.modal.z40{z-index:40}
 
 textarea{
-  width:100%;min-height:100px;padding:.8rem;
-  border-radius:14px;border:1px solid var(--border);
-  font-size:1rem
+  width:100%;min-height:90px;padding:.75rem;
+  border-radius:12px;border:1px solid var(--border);
+  font-size:1rem;font-family:inherit;resize:vertical;
 }
 
-.entry{background-color:#e4e4e4a2;border-radius:20px;padding:.9rem; margin-bottom:1rem}
-.entry-top{display:flex;justify-content:space-between;align-items:center}
+/* ── ENTRY ── */
+.entry{background:#f3f5f7;border-radius:16px;padding:.85rem;margin-bottom:.9rem}
+.entry-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
 .entry-delete{
-  border:none;background:#c0c0c05b;border-radius:50%;
-  width:32px;height:32px
+  border:none;background:#c0c0c040;border-radius:50%;
+  width:34px;height:34px;font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
 }
+.entry-delete:active{background:#c0c0c090}
+.entry-time-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.4rem}
+.entry-time-row input[type=time],
+.entry-date-input{
+  border:1px solid #ddd;border-radius:8px;padding:.35rem .5rem;
+  font-size:.9rem;font-family:inherit;background:#fff;min-height:38px;
+}
+.entry-time-row input[type=time]{width:88px}
+.entry-duration{font-size:.85rem;font-weight:600;color:#555;margin-left:auto}
+.entry-pause-badge{font-size:.75rem;color:#888;background:#e8e8e8;border-radius:6px;padding:2px 6px}
 
-/* BOTTOM ACTIONS */
+/* ── BOTTOM ACTIONS ── */
 .bottom-actions{display:flex;gap:.8rem;margin-top:1rem}
 .bottom-actions button{
-  flex:1;padding:.9rem;border-radius:16px;
-  border:none;font-size:1.1rem;font-weight:600;
-  background:var(--accent);color:#fff
+  flex:1;padding:.9rem;border-radius:16px;border:none;
+  font-size:1rem;font-weight:600;background:var(--accent);color:#fff;
+  cursor:pointer;font-family:inherit;transition:opacity .15s;
+}
+.bottom-actions button:active{opacity:.8}
+
+/* ── DATUM-HIGHLIGHT (Tagesansicht) ── */
+.day-date .weekday{
+  font-size:.78rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.07em;
+  color:var(--accent);
+}
+.day-date .datestr{
+  font-size:1rem;font-weight:700;color:var(--text);
 }
 
-.pause-container{
-  height:60px;              /* fester Platz für Pause-Button */
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  margin-top:1.2rem;
-  margin-bottom: 2rem;
-}
-
-.pause-btn{
-  padding:1.5rem 3rem;
-  border-radius:14px;
-  border:1px solid var(--border);
-  background:#fff;
-  font-weight:600;
-}
-
-.icon-btn{
-  width:70px;
-  height:70px;
+/* ── EXPORT SPINNER ── */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{
+  width:18px;height:18px;
+  border:2.5px solid rgba(255,255,255,.4);
+  border-top-color:#fff;
   border-radius:50%;
-  font-size:1rem;     /* ⬅ größer */
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0;
+  animation:spin .7s linear infinite;
+  display:inline-block;vertical-align:middle;
 }
 
-
+/* ── TAG-DETAIL ── */
+.day-project-block{
+  position:relative;margin-bottom:1.2rem;
+  padding:.7rem .7rem .7rem 1.1rem;
+  border-radius:14px;background:#b1bcc82d;
+}
+.day-project-color-bar{
+  position:absolute;left:0;top:0;bottom:0;
+  width:7px;border-radius:7px 0 0 7px;
+}
 </style>
 </head>
-
 <body>
 <div id="app">
 
 <nav>
-  <button :class="{active:tab==='home'}" @click="tab='home'">Timer</button>
-  <button :class="{active:tab==='days'}" @click="tab='days'">Tagesansicht</button>
+  <button :class="{active:tab==='home'}"     @click="tab='home'">Timer</button>
+  <button :class="{active:tab==='days'}"     @click="tab='days'">Tagesansicht</button>
   <button :class="{active:tab==='projects'}" @click="tab='projects'">Projektansicht</button>
 </nav>
 
-<!-- HOME -->
+<!-- ══════════════════════════════════
+     HOME / TIMER
+══════════════════════════════════ -->
 <div v-if="tab==='home'" class="page">
   <div class="timer-wrapper">
     <div class="top-area">
@@ -273,845 +272,645 @@ textarea{
       </select>
       <div class="timer">{{formattedTime}}</div>
     </div>
-
-<div class="flex-spacer"></div>
-
-<button v-if="!running" class="main-btn" @click="start">Start</button>
-<button v-else
-        :class="['main-btn', !paused ? 'stop' : '']"
-        @click="stop">
-  Stop
-</button>
-
-<div class="pause-container">
-  <button v-if="running"
-          @click="paused ? resume() : pause()"
-          class="pause-btn icon-btn">
-
-    <span v-if="!paused">Pause</span>
-    <span v-else>▶</span>
-
-  </button>
-</div>
-</div>  <!-- timer-wrapper -->
-</div>  <!-- HOME page -->
-
-<!-- NOTE MODAL -->
-<div v-if="showNote" class="modal">
-  <div class="modal-card">
-    <button class="modal-close" @click="skipNote">×</button>
-    <h3>Beschreibung</h3>
-    <textarea v-model="note"></textarea>
-    <button style="margin-top:1rem;width:100%" @click="saveEntry">Speichern</button>
-  </div>
-</div>
-
-<!-- PROJECT OVERVIEW -->
-<div v-if="tab==='projects'" class="page">
-  <div v-for="p in projects" :key="p.id"
-       class="project-item"
-       :style="{'--accent':p.color}"
-       @click="openProject(p)">
-    {{p.name}}
-    <span>{{(p.total/3600).toFixed(2)}} Stunden</span>
-  </div>
-
-  <div class="bottom-actions">
-    <button @click="addProject">Projekt hinzufügen</button>
-    <button @click="exportAll">Export</button>
-  </div>
-  <label style="display:block;margin-bottom:.4rem; margin-top: 1.5rem;"> </label>
-
-<select v-model="selectedUser"
-        style="width:100%;padding:0.8rem;margin-bottom:1rem; background-color: #ffffff;">
-  <option disabled value="">Benutzer auswählen</option>
-  <option v-for="u in users" :key="u" :value="u">
-    {{ u }}
-  </option>
-</select>
-<div v-if="lastExport"
-     style="margin-top:1rem;
-            font-size:.85rem;
-            color:#666;
-            text-align:center;">
-
-  Zuletzt exportiert am
-  {{ new Date(lastExport).toLocaleDateString('de-DE') }}
-  um
-  {{ new Date(lastExport).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) }}
-
-</div>
-</div>
-
-<!-- PROJECT DETAIL -->
-<div v-if="selectedProject" class="modal">
-  <div class="modal-card">
-    <button class="modal-close" @click="selectedProject=null">×</button>
-
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <h2 style="margin-top: 2rem;">{{selectedProject.name}}</h2>
-      <button
-        style="border:none;background:none;color:var(--danger);font-size:1.1rem"
-        @click="deleteProject"
-      >
-        Projekt löschen
+    <div class="flex-spacer"></div>
+    <button v-if="!running" class="main-btn" @click="start">Start</button>
+    <button v-else :class="['main-btn',!paused?'stop':'']" @click="stop">Stop</button>
+    <div class="pause-container">
+      <button v-if="running" @click="paused?resume():pause()" class="pause-btn">
+        <span v-if="!paused">⏸ Pause</span>
+        <span v-else>▶ Weiter</span>
       </button>
     </div>
-
-<div v-for="(e,i) in selectedProject.entries" :key="e.id" class="entry">
-
-  <div class="entry-top">
-<!-- WENN NICHT EXPORTIERT -->
-<input v-if="!e.exported"
-       type="date"
-       :value="e.start.slice(0,10)"
-       @input="val => {
-         const newDate = val.target.value;
-         const start = new Date(e.start);
-         const end = new Date(e.end);
-
-         const [year,month,day] = newDate.split('-');
-         start.setFullYear(year, month-1, day);
-         end.setFullYear(year, month-1, day);
-
-         e.start = start.toISOString();
-         e.end = end.toISOString();
-
-         updateDuration(e);
-       }"
-       style="font-weight:600;border:none;background:transparent">
-
-<!-- WENN EXPORTIERT -->
-<div v-else style="font-weight:600">
-  {{ formatDay(e.start.slice(0,10)) }}
-</div>
-    <button class="entry-delete" @click="deleteEntry(i)">🗑️</button>
   </div>
-
-  <div style="margin:.4rem 0; display:flex; gap:.6rem; align-items:center">
-
-<!-- START -->
-<template v-if="!e.exported">
-  <input type="time"
-         :value="formatTime(e.start)"
-         @input="val => {
-           const d = new Date(e.start);
-           const [h,m] = val.target.value.split(':');
-           d.setHours(h,m);
-           e.start = d.toISOString();
-           updateDuration(e);
-         }">
-</template>
-
-<template v-else>
-  <span>{{ formatTime(e.start) }}</span>
-</template>
-
-<span>–</span>
-
-<!-- END -->
-<template v-if="!e.exported">
-  <input type="time"
-         :value="formatTime(e.end)"
-         @input="val => {
-           const d = new Date(e.end);
-           const [h,m] = val.target.value.split(':');
-           d.setHours(h,m);
-           e.end = d.toISOString();
-           updateDuration(e);
-         }">
-</template>
-
-<template v-else>
-  <span>{{ formatTime(e.end) }}</span>
-</template>
-
-           <div style="font-weight:500;font-size: 0.9rem;">
-  <span v-if="e.paused && e.paused > 0">
-     + {{ Math.floor(e.paused / 60) }} min Pause
-  </span>
 </div>
 
-
-
+<!-- ══════════════════════════════════
+     NOTE MODAL
+══════════════════════════════════ -->
+<div v-if="showNote" class="modal z40">
+  <div class="modal-card">
+    <button class="modal-close" @click="skipNote">×</button>
+    <h3 style="margin:.2rem 0 1rem">Beschreibung</h3>
+    <textarea v-model="note" placeholder="Was wurde gemacht?"></textarea>
+    <button style="margin-top:.9rem;width:100%;padding:.9rem;border-radius:14px;border:none;background:var(--accent);color:#fff;font-size:1.05rem;font-weight:700;font-family:inherit;cursor:pointer"
+            @click="saveEntry">Speichern</button>
   </div>
-
-<div style="font-weight:600;margin-bottom: 0.5rem;">
- = {{ (e.duration / 3600).toFixed(2) }} h
 </div>
 
-
-  <textarea v-if="!e.exported"
-          v-model="e.note"
-          @change="save"></textarea>
-
-<div v-else
-     style="white-space:pre-wrap;color:#444;padding:.4rem 0">
-  {{ e.note }}
+<!-- ══════════════════════════════════
+     PROJEKTANSICHT
+══════════════════════════════════ -->
+<div v-if="tab==='projects'" class="page projects-list">
+  <div v-for="(p,index) in projects"
+       :key="p.id"
+       class="project-item"
+       :style="{'--accent':p.color}"
+       @click="dragProjectIndex===null&&openProject(p)">
+    {{p.name}}
+    <span>{{(p.total/3600).toFixed(2)}} Stunden</span>
+    <div class="drag-handle"
+         @mousedown.stop.prevent="startDragMouse(index,$event)"
+         @touchstart.stop.prevent="startDrag(index,$event)">☰</div>
+  </div>
+  <div class="bottom-actions">
+    <button @click="addProject">+ Projekt</button>
+    <button @click="exportAll" :disabled="exporting"
+            :style="exporting?'opacity:.7;cursor:default':''">
+      <span v-if="exporting"><span class="spinner"></span> Exportiere…</span>
+      <span v-else>Export</span>
+    </button>
+  </div>
+  <label style="display:block;margin-top:1.5rem;margin-bottom:.4rem;font-size:.85rem;color:#666">Benutzer</label>
+  <select v-model="selectedUser"
+          style="width:100%;padding:.8rem;border-radius:12px;border:1px solid var(--border);background:#fff;font-family:inherit;font-size:1rem">
+    <option disabled value="">Benutzer auswählen</option>
+    <option v-for="u in users" :key="u" :value="u">{{u}}</option>
+  </select>
+  <div v-if="lastExport" style="margin-top:.8rem;font-size:.8rem;color:#888;text-align:center">
+    Zuletzt exportiert am {{new Date(lastExport).toLocaleDateString('de-DE')}}
+    um {{new Date(lastExport).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}}
+  </div>
 </div>
 
-</div>
-
-<div class="todo-section" v-if="selectedProject">
-
-  <h3>ToDo</h3>
-
-  <div v-for="(todo, i) in selectedProject.todos"
-       :key="todo.id"
-       class="todo-item">
-
-    <div class="todo-left"
-         @click="todo.done = !todo.done; save()">
-
-      <div class="todo-checkbox"
-           :class="{done: todo.done}">
-      </div>
-
-      <span :class="{done: todo.done}">
-        {{ todo.text }}
-      </span>
-
+<!-- ══════════════════════════════════
+     PROJEKT-DETAIL MODAL
+══════════════════════════════════ -->
+<div v-if="selectedProject" class="modal z40">
+  <div class="modal-card">
+    <button class="modal-close" @click="selectedProject=null">×</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:.4rem 0 .9rem">
+      <h2 style="margin:0">{{selectedProject.name}}</h2>
+      <button style="border:none;background:none;color:var(--danger);font-size:.9rem;cursor:pointer;font-family:inherit"
+              @click="deleteProject">Löschen</button>
     </div>
 
-    <button class="todo-delete"
-            @click="deleteTodo(i)">
-      ✕
-    </button>
+    <div v-for="(e,i) in selectedProject.entries" :key="e.id" class="entry">
+      <div class="entry-top">
+        <input v-if="!e.exported" type="date" class="entry-date-input"
+               :value="e.start.slice(0,10)"
+               @input="val=>updateEntryDate(e,val.target.value)">
+        <div v-else style="font-weight:600;font-size:.9rem">{{formatDay(e.start.slice(0,10))}}</div>
+        <button class="entry-delete" @click="deleteEntry(i)">🗑️</button>
+      </div>
+      <div class="entry-time-row">
+        <input v-if="!e.exported" type="time" :value="formatTimeValue(e.start)"
+               @input="val=>updateEntryTime(e,val.target.value,'start')">
+        <span v-else>{{formatTime(e.start)}}</span>
+        <span style="color:#bbb">–</span>
+        <input v-if="!e.exported" type="time" :value="formatTimeValue(e.end)"
+               @input="val=>updateEntryTime(e,val.target.value,'end')">
+        <span v-else>{{formatTime(e.end)}}</span>
+        <span v-if="e.paused&&e.paused>0" class="entry-pause-badge">
+          {{Math.floor(e.paused/60)}} min Pause
+        </span>
+        <span class="entry-duration">= {{(e.duration/3600).toFixed(2)}} h</span>
+      </div>
+      <textarea v-if="!e.exported" v-model="e.note" @change="save"
+                placeholder="Beschreibung..." style="min-height:70px;margin-top:.4rem"></textarea>
+      <div v-else style="white-space:pre-wrap;color:#555;font-size:.9rem;margin-top:.4rem;padding:.2rem 0">{{e.note}}</div>
+    </div>
 
+    <div class="todo-section">
+      <h3 style="margin:.4rem 0 .8rem">ToDo</h3>
+      <div v-for="(todo,i) in selectedProject.todos" :key="todo.id" class="todo-item">
+        <div class="todo-left" @click="todo.done=!todo.done;save()">
+          <div class="todo-checkbox" :class="{done:todo.done}"></div>
+          <span :class="{done:todo.done}">{{todo.text}}</span>
+        </div>
+        <button class="todo-delete" @click="deleteTodo(i)">✕</button>
+      </div>
+      <div class="todo-input-row">
+        <input type="text" v-model="newTodo" placeholder="Neues ToDo..." @keyup.enter="addTodo">
+        <button @click="addTodo">+</button>
+      </div>
+    </div>
   </div>
-
-  <div class="todo-input-row">
-    <input type="text"
-           v-model="newTodo"
-           placeholder="Neues ToDo hinzufügen..."
-           @keyup.enter="addTodo">
-    <button @click="addTodo">+</button>
-  </div>
-
 </div>
 
+<!-- ══════════════════════════════════
+     TAGESANSICHT
+══════════════════════════════════ -->
+<div v-if="tab==='days'" class="page">
+  <div style="padding:.9rem 1rem;margin-bottom:1.2rem;background:#fff;border-radius:16px;border:1px solid var(--border);text-align:center;font-weight:700;font-size:.9rem"
+       :style="{color:totalAdjustment>0?'#16a34a':(totalAdjustment<0?'var(--danger)':'inherit')}">
+    Über-/Minusstunden Gesamt:
+    {{totalAdjustment>0?'+':''}}{{totalAdjustment.toFixed(2)}} h
+  </div>
+  <div v-for="d in daysOverview" :key="d.date"
+       class="project-item" style="cursor:pointer" @click="openDay(d.date)">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="day-date">
+        <span class="weekday">{{formatWeekday(d.date)}}</span>
+        <span class="datestr"> {{formatShortDate(d.date)}}</span>
+      </div>
+      <span v-if="dailyAdjustments[d.date]"
+            style="font-size:.88rem;font-weight:600"
+            :style="{color:dailyAdjustments[d.date]>0?'#16a34a':'var(--danger)'}">
+        {{dailyAdjustments[d.date]>0?'+':''}}{{dailyAdjustments[d.date].toFixed(2)}} h
+      </span>
+    </div>
+    <span style="font-size:.82rem;font-weight:400;color:#666">{{(d.seconds/3600).toFixed(2)}} Stunden</span>
+  </div>
+  <div v-if="!daysOverview.length" style="text-align:center;color:#888;margin-top:3rem">
+    Noch keine Einträge vorhanden
   </div>
 </div>
 
-<!-- DAY DETAIL MODAL -->
+<!-- ══════════════════════════════════
+     TAG-DETAIL MODAL (NEU: editierbar + synchronisiert)
+══════════════════════════════════ -->
 <div v-if="dayDetail" class="modal">
   <div class="modal-card">
     <button class="modal-close" @click="selectedDay=null">×</button>
 
-    <h3 style="margin:0">
-      {{ formatDay(dayDetail.date) }}
-    </h3>
-
-    <p style="margin:.4rem 0 1rem 0;font-weight:700">
-      ⏱ {{ (dayDetail.totalSeconds / 3600).toFixed(2) }} Stunden
+    <h3 style="margin:.2rem 0 .2rem">{{formatDay(dayDetail.date)}}</h3>
+    <p style="margin:.2rem 0 1rem;font-weight:700;font-size:1.05rem">
+      ⏱ {{(dayDetail.totalSeconds/3600).toFixed(2)}} h
     </p>
 
-    <div style="margin-bottom:1rem">
-  <label style="font-size:.9rem">Über-/Minusstunden</label>
-<input v-if="!exportedAdjustments[dayDetail.date]"
-       type="number"
-       step="0.25"
-       :value="dailyAdjustments[dayDetail.date] || 0"
-       @input="val => {
-         dailyAdjustments[dayDetail.date] =
-           parseFloat(val.target.value) || 0;
-         save();
-       }"
-       style="width:100%;padding:.4rem;margin-top:.4rem">
-<div v-else
-     style="margin-top:.4rem;font-weight:600;
-            color: dailyAdjustments[dayDetail.date] > 0 ? 'green' : 'red'">
+    <!-- Über-/Minusstunden -->
+    <div style="background:#f3f5f7;border-radius:12px;padding:.8rem;margin-bottom:1.1rem">
+      <label style="font-size:.85rem;color:#666">Über-/Minusstunden</label>
+      <input v-if="!exportedAdjustments[dayDetail.date]"
+             type="number" step="0.25"
+             :value="dailyAdjustments[dayDetail.date]||0"
+             @input="val=>{dailyAdjustments[dayDetail.date]=parseFloat(val.target.value)||0;save()}"
+             style="width:100%;padding:.45rem .6rem;margin-top:.4rem;border-radius:8px;border:1px solid #ddd;font-size:1rem;font-family:inherit">
+      <div v-else style="margin-top:.4rem;font-weight:700"
+           :style="{color:(dailyAdjustments[dayDetail.date]||0)>=0?'#16a34a':'var(--danger)'}">
+        {{(dailyAdjustments[dayDetail.date]||0)>0?'+':''}}
+        {{(dailyAdjustments[dayDetail.date]||0).toFixed(2)}} h
+      </div>
+    </div>
 
-  {{ dailyAdjustments[dayDetail.date] > 0 ? '+' : '' }}
-  {{ dailyAdjustments[dayDetail.date].toFixed(2) }} h
-
-
-</div>
-</div>
-
-
-<div v-for="p in dayDetail.projects" :key="p.name"
-     style="
-       position:relative;
-       margin-bottom:1.2rem;
-       padding:0.6rem 0.6rem 0.6rem 1.2rem;
-       border-radius:14px;
-       background:#b1bcc82d;
-     ">
-      <span
-    :style="{
-      position: 'absolute',
-      left: 0,
-      top: '0%',
-      bottom: '0%',
-      width: '8px',
-      borderBottomLeftRadius: '8px',
-      borderTopLeftRadius: '8px',
-      background: p.color
-
-    }">
-  </span>
-
-
-
-      <div style="display:flex;justify-content:space-between;align-items:center;
-                  font-weight:700;margin-bottom:.4rem">
-
-        <span>{{ p.name }}</span>
-
-        <span style="font-size:1rem">
-          {{ (p.seconds / 3600).toFixed(2) }} h
-        </span>
-
+    <!-- Einträge pro Projekt – direkt editierbar, synchronisiert mit Projektansicht -->
+    <div v-for="p in dayDetail.projects" :key="p.id" class="day-project-block">
+      <span class="day-project-color-bar" :style="{background:p.color}"></span>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:.6rem">
+        <span>{{p.name}}</span>
+        <span style="font-size:.95rem">{{(p.seconds/3600).toFixed(2)}} h</span>
       </div>
 
-      <div v-for="e in p.entries" :key="e.id"
-           style="padding:.4rem 0;border-bottom:1px solid #eee;
-                  font-size:.85rem">
-
-  
-<span style="font-weight:400">
-  {{ (e.duration / 3600).toFixed(2) }} h
-</span>
-
-        <div v-if="e.note" style="color:#666">
-          {{ e.note }}
+      <div v-for="e in p.entries" :key="e.id" class="entry" style="background:#fff;margin-bottom:.6rem">
+        <div class="entry-top">
+          <input v-if="!e.exported" type="date" class="entry-date-input"
+                 :value="e.start.slice(0,10)"
+                 @input="val=>updateEntryDate(e,val.target.value)">
+          <div v-else style="font-weight:600;font-size:.9rem">{{formatDay(e.start.slice(0,10))}}</div>
+          <button class="entry-delete" @click="deleteEntryById(e.id)">🗑️</button>
         </div>
-
+        <div class="entry-time-row">
+          <input v-if="!e.exported" type="time" :value="formatTimeValue(e.start)"
+                 @input="val=>updateEntryTime(e,val.target.value,'start')">
+          <span v-else>{{formatTime(e.start)}}</span>
+          <span style="color:#bbb">–</span>
+          <input v-if="!e.exported" type="time" :value="formatTimeValue(e.end)"
+                 @input="val=>updateEntryTime(e,val.target.value,'end')">
+          <span v-else>{{formatTime(e.end)}}</span>
+          <span v-if="e.paused&&e.paused>0" class="entry-pause-badge">
+            {{Math.floor(e.paused/60)}} min Pause
+          </span>
+          <span class="entry-duration">= {{(e.duration/3600).toFixed(2)}} h</span>
+        </div>
+        <textarea v-if="!e.exported" v-model="e.note" @change="save"
+                  placeholder="Beschreibung..." style="min-height:60px;margin-top:.4rem"></textarea>
+        <div v-else style="white-space:pre-wrap;color:#555;font-size:.9rem;margin-top:.4rem">{{e.note}}</div>
       </div>
     </div>
 
   </div>
 </div>
 
-
-
-<!-- DAY OVERVIEW -->
-<div v-if="tab==='days'" class="page">
-
-<div
-  style="
-    padding:1rem;
-    margin-bottom:1.5rem;
-    background:#fff;
-    border-radius:18px;
-    border:1px solid var(--border);
-    text-align:center;
-    font-weight:700;
-    font-size:0.9rem;
-  "
-  :style="{ color: totalAdjustment > 0 ? 'green' : (totalAdjustment < 0 ? 'red' : 'inherit') }"
->
-  Über-/Minusstunden Gesamt:
-  {{ totalAdjustment > 0 ? '+' : '' }}
-  {{ totalAdjustment.toFixed(2) }} h
-</div>
-
-
-<div v-for="d in daysOverview"
-     :key="d.date"
-     class="project-item"
-     style="cursor:pointer"
-     @click="openDay(d.date)">
-
-
-<!-- Kopfzeile -->
-<div style="display:flex;justify-content:space-between;align-items:center">
-
-  <span style="font-size: 1rem;">
-    {{ formatDay(d.date) }}
-  </span>
-
-  <span v-if="dailyAdjustments[d.date]"
-        :style="{
-          color: dailyAdjustments[d.date] > 0 ? 'green' : 'red'
-          }">
-    {{ dailyAdjustments[d.date] > 0 ? '+' : '' }}
-    {{ dailyAdjustments[d.date].toFixed(2) }} h
-  </span>
-
-</div>
-
-<!-- Normale Stunden darunter -->
-<span style="font-size:0.85rem; margin-top:.4rem; display:block;">
-  {{ (d.seconds / 3600).toFixed(2) }} Stunden
-</span>
-
-  </div>
-
-  <div v-if="!daysOverview.length"
-       style="text-align:center;color:#777;margin-top:3rem">
-    Noch keine Einträge vorhanden
-  </div>
-
-</div>
-
-
-</div>
-
+</div><!-- /#app -->
 <script>
 const EXPORT_URL = "https://script.google.com/macros/s/AKfycbybPVsyCMPSffBkGEx6zKn7QzP5-JS8VdsyCGlUTgT8mcB1P2pZs4VU3JexYkmYipiRYA/exec";
-                    
 const { createApp } = Vue;
 
 createApp({
   data() {
     return {
       tab: 'home',
-      projects: JSON.parse(localStorage.getItem('projects') || '[]'),
-      selectedProjectId: localStorage.getItem('selectedProjectId') || '',
+      projects: [],
+      selectedProjectId: '',
       selectedProject: null,
-      timer: null,
-      elapsed: 0,           // aktive Zeit in Sekunden
-      showNote: false,
-      note: '',
-      newTodo: "",
-      users: ["Bennet", "Dennis", "Till", "Nicole", "Patrick"],
-      selectedUser: localStorage.getItem("selectedUser") || "",
+      // Drag & Drop (interne Felder, kein Vue-State nötig)
+      dragProjectIndex: null, // nur für @click-Guard im Template
+      // Timer
+      timer: null, elapsed: 0,
+      running: false, startTime: null,
+      paused: false, pausedTime: 0, pauseStart: null,
+      // Note / Todo
+      showNote: false, note: '', newTodo: '',
+      // User / Export
+      users: ["Bennet","Dennis","Till","Nicole","Patrick"],
+      selectedUser: '',
       selectedDay: null,
-      dailyAdjustments: JSON.parse(localStorage.getItem('dailyAdjustments') || '{}'),
-      lastExport: localStorage.getItem('lastExport') || null,
-      running: JSON.parse(localStorage.getItem('timerRunning') || 'false'),
-      startTime: JSON.parse(localStorage.getItem('timerStart') || 'null'),
-      paused: JSON.parse(localStorage.getItem('timerPaused') || 'false'),
-      pausedTime: JSON.parse(localStorage.getItem('timerPausedTime') || '0'),
-      pauseStart: JSON.parse(localStorage.getItem('timerPauseStart') || 'null'),
-      exportedAdjustments: JSON.parse(localStorage.getItem('exportedAdjustments') || '{}'),
-    }
+      dailyAdjustments: {},
+      lastExport: null,
+      exportedAdjustments: {},
+      exporting: false,
+    };
   },
 
   computed: {
-
     totalAdjustment() {
-    return Object.values(this.dailyAdjustments)
-    .reduce((sum, val) => sum + val, 0);
+      return Object.values(this.dailyAdjustments).reduce((s,v)=>s+v,0);
     },
-
-
     formattedTime() {
-      const s = Math.floor(this.elapsed);
-      return (
-        String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
-        String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' +
-        String(s % 60).padStart(2, '0')
-      );
+      const s=Math.floor(this.elapsed);
+      return String(Math.floor(s/3600)).padStart(2,'0')+':'+
+             String(Math.floor((s%3600)/60)).padStart(2,'0')+':'+
+             String(s%60).padStart(2,'0');
     },
-
     daysOverview() {
-      const map = {};
-      this.projects.forEach(p => {
-        p.entries.forEach(e => {
-          const day = e.start.slice(0, 10);
-          if (!map[day]) map[day] = { date: day, seconds: 0 };
-          map[day].seconds += e.duration;
+      const map={};
+      this.projects.forEach(p=>{
+        p.entries.forEach(e=>{
+          const day=e.start.slice(0,10);
+          if(!map[day]) map[day]={date:day,seconds:0};
+          map[day].seconds+=e.duration;
         });
       });
-      return Object.values(map).sort((a, b) => b.date.localeCompare(a.date));
+      return Object.values(map).sort((a,b)=>b.date.localeCompare(a.date));
     },
-
-dayDetail() {
-  if (!this.selectedDay) return null;
-
-  const projectsMap = {};
-  let totalSeconds = 0;
-
-  this.projects.forEach(p => {
-    (p.entries || []).forEach(e => {
-      const day = e.start.slice(0, 10);
-      if (day !== this.selectedDay) return;
-
-      if (!projectsMap[p.id]) {
-        projectsMap[p.id] = {
-          name: p.name,
-          color: p.color,
-          seconds: 0,
-          entries: []
-        };
-
-        
-      }
-
-  
-
-      projectsMap[p.id].seconds += e.duration || 0;
-      totalSeconds += e.duration || 0;
-      projectsMap[p.id].entries.push(e);
-    });
-  });
-
-  // Wenn es keine Einträge gibt, trotzdem leeres Modal erzeugen
-  if (Object.keys(projectsMap).length === 0) {
-    return {
-      date: this.selectedDay,
-      totalSeconds: 0,
-      projects: []
-    };
-  }
-
-  return {
-    date: this.selectedDay,
-    totalSeconds,
-    projects: Object.values(projectsMap)
-  };
-}
-  },
- 
-
-  watch: {
-    selectedUser(newVal) {
-      if (newVal) localStorage.setItem("selectedUser", newVal);
-    },
-    selectedProjectId(newVal) {
-    localStorage.setItem('selectedProjectId', newVal || '');
-  },
-    showNote(newVal) {
-      if (newVal) {
-        this.$nextTick(() => {
-          if (this.$refs.noteField) this.$refs.noteField.focus();
+    // Gibt echte Objekt-Referenzen zurück → Änderungen hier = Änderungen überall
+    dayDetail() {
+      if(!this.selectedDay) return null;
+      const pm={};
+      let total=0;
+      this.projects.forEach(p=>{
+        (p.entries||[]).forEach(e=>{
+          if(e.start.slice(0,10)!==this.selectedDay) return;
+          if(!pm[p.id]) pm[p.id]={id:p.id,name:p.name,color:p.color,seconds:0,entries:[]};
+          pm[p.id].seconds+=e.duration||0;
+          total+=e.duration||0;
+          pm[p.id].entries.push(e); // ← echte Referenz, kein Copy!
         });
-      }
+      });
+      return {date:this.selectedDay,totalSeconds:total,projects:Object.values(pm)};
     }
   },
-  
 
-mounted() {
-  const running = localStorage.getItem('timerRunning') === 'true';
-  const start = localStorage.getItem('timerStart');
+  watch: {
+    selectedUser(v)      { if(v) localStorage.setItem('selectedUser',v); },
+    selectedProjectId(v) { localStorage.setItem('selectedProjectId',v||''); },
+  },
 
-  if (!running || !start) {
-    this.running = false;
-    this.paused = false;
-    this.elapsed = 0;
-    return;
-  }
+  mounted() {
+    this.projects            = JSON.parse(localStorage.getItem('projects')            ||'[]');
+    this.selectedProjectId   = localStorage.getItem('selectedProjectId')               ||'';
+    this.selectedUser        = localStorage.getItem('selectedUser')                    ||'';
+    this.dailyAdjustments    = JSON.parse(localStorage.getItem('dailyAdjustments')    ||'{}');
+    this.exportedAdjustments = JSON.parse(localStorage.getItem('exportedAdjustments') ||'{}');
+    this.lastExport          = localStorage.getItem('lastExport')                      ||null;
 
-  this.running = true;
-  this.startTime = parseInt(start);
-
-  this.paused = localStorage.getItem('timerPaused') === 'true';
-  this.pausedTime = parseFloat(localStorage.getItem('timerPausedTime') || '0');
-  this.pauseStart = localStorage.getItem('timerPauseStart');
-
-  if (this.paused) {
-    return; // ❗ Kein Intervall starten wenn pausiert
-  }
-
-  this.timer = setInterval(() => {
-    const now = Date.now();
-    this.elapsed = Math.floor(
-      (now - this.startTime - this.pausedTime * 1000) / 1000
-    );
-  }, 1000);
-},
+    const running=localStorage.getItem('timerRunning')==='true';
+    const start  =localStorage.getItem('timerStart');
+    if(!running||!start){this.running=false;this.paused=false;this.elapsed=0;return;}
+    this.running   =true;
+    this.startTime =parseInt(start);
+    this.paused    =localStorage.getItem('timerPaused')==='true';
+    this.pausedTime=parseFloat(localStorage.getItem('timerPausedTime')||'0');
+    this.pauseStart=localStorage.getItem('timerPauseStart')||null;
+    if(this.paused) return;
+    this.timer=setInterval(()=>{
+      this.elapsed=Math.floor((Date.now()-this.startTime-this.pausedTime*1000)/1000);
+    },1000);
+  },
 
   methods: {
-start() {
-  if (!this.selectedProjectId) return alert("Bitte Projekt wählen");
 
-  this.running = true;
-  this.paused = false;
-  this.pausedTime = 0;
-  this.pauseStart = null;
+    /* ── TIMER ────────────────────────────── */
+    start() {
+      if(!this.selectedProjectId) return alert("Bitte Projekt wählen");
+      this.running=true;this.paused=false;this.pausedTime=0;this.pauseStart=null;
+      this.startTime=Date.now();
+      this.timer=setInterval(()=>{
+        this.elapsed=Math.floor((Date.now()-this.startTime-this.pausedTime*1000)/1000);
+      },1000);
+      localStorage.setItem('timerRunning','true');
+      localStorage.setItem('timerStart',this.startTime);
+      localStorage.setItem('timerPaused','false');
+      localStorage.setItem('timerPausedTime','0');
+      localStorage.removeItem('timerPauseStart');
+    },
+    pause() {
+      if(!this.running||this.paused) return;
+      clearInterval(this.timer);
+      this.paused=true;this.pauseStart=Date.now();
+      localStorage.setItem('timerPaused','true');
+      localStorage.setItem('timerPauseStart',this.pauseStart);
+    },
+    resume() {
+      if(!this.running||!this.paused) return;
+      this.paused=false;
+      if(this.pauseStart){this.pausedTime+=(Date.now()-this.pauseStart)/1000;this.pauseStart=null;}
+      this.timer=setInterval(()=>{
+        this.elapsed=Math.floor((Date.now()-this.startTime-this.pausedTime*1000)/1000);
+      },1000);
+      localStorage.setItem('timerPaused','false');
+      localStorage.setItem('timerPausedTime',this.pausedTime);
+      localStorage.removeItem('timerPauseStart');
+    },
+    stop() {
+      if(!this.running) return;
+      clearInterval(this.timer);
+      this.running=false;this.paused=false;this.pauseStart=null;
+      localStorage.setItem('timerRunning','false');
+      ['timerStart','timerPaused','timerPausedTime','timerPauseStart']
+        .forEach(k=>localStorage.removeItem(k));
+      this.showNote=true;
+    },
 
-  this.startTime = Date.now();
-
-  this.timer = setInterval(() => {
-    const now = Date.now();
-    this.elapsed = Math.floor((now - this.startTime - this.pausedTime * 1000) / 1000);
-  }, 1000);
-  localStorage.setItem('timerRunning', true);
-localStorage.setItem('timerStart', this.startTime);
-localStorage.setItem('timerPaused', false);
-localStorage.setItem('timerPausedTime', 0);
-localStorage.removeItem('timerPauseStart');
-},
-
-pause() {
-  if (!this.running || this.paused) return;
-
-  clearInterval(this.timer);
-  this.paused = true;
-  this.pauseStart = Date.now();
-  localStorage.setItem('timerPaused', true);
-localStorage.setItem('timerPauseStart', this.pauseStart);
-},
-
-resume() {
-  if (!this.running || !this.paused) return;
-
-  this.paused = false;
-
-  if (this.pauseStart) {
-    this.pausedTime += (Date.now() - this.pauseStart) / 1000;
-    this.pauseStart = null;
-  }
-
-  this.timer = setInterval(() => {
-    const now = Date.now();
-    this.elapsed = Math.floor((now - this.startTime - this.pausedTime * 1000) / 1000);
-  }, 1000);
-  localStorage.setItem('timerPaused', false);
-localStorage.setItem('timerPausedTime', this.pausedTime);
-localStorage.removeItem('timerPauseStart');
-},
-
-stop() {
-  if (!this.running) return;
-
-  clearInterval(this.timer);
-
-  this.running = false;
-  this.paused = false;
-  this.pauseStart = null;
-
-  localStorage.setItem('timerRunning', 'false');
-  localStorage.removeItem('timerStart');
-  localStorage.removeItem('timerPaused');
-  localStorage.removeItem('timerPausedTime');
-  localStorage.removeItem('timerPauseStart');
-
-  this.showNote = true;
-},
-
-saveEntry() {
-  if (!this.selectedProjectId) return alert("Projekt wählen");
-  if (this.elapsed <= 0) return alert("Keine Zeit gemessen");
-
-  const project = this.projects.find(
-    p => String(p.id) === String(this.selectedProjectId)
-  );
-
-  if (!project) {
-    alert("Projekt nicht gefunden");
-    return;
-  }
-
-  const end = new Date();
-  const start = new Date(
-    end.getTime() - (this.elapsed + this.pausedTime) * 1000
-  );
-
-  const entry = {
-    id: crypto.randomUUID(),
-    start: start.toISOString(),
-    end: end.toISOString(),
-    duration: this.elapsed,
-    paused: this.pausedTime,
-    note: this.note || "",
-    exported: false
-  };
-
-  project.entries.unshift(entry);
-  project.total = project.entries.reduce(
-    (sum, e) => sum + e.duration,
-    0
-  );
-
-  this.save();
-
-  // Reset
-  this.elapsed = 0;
-  this.pausedTime = 0;
-  this.note = "";
-  this.showNote = false;
-  this.running = false;
-  this.paused = false;
-  this.startTime = null;
-  this.pauseStart = null;
-
-  localStorage.setItem('timerRunning', 'false');
-  localStorage.removeItem('timerStart');
-  localStorage.removeItem('timerPaused');
-  localStorage.removeItem('timerPausedTime');
-  localStorage.removeItem('timerPauseStart');
-},
-
-deleteEntry(index) {
-  if (!confirm("Eintrag wirklich löschen?")) return;
-
-  const entry = this.selectedProject.entries[index];
-
-  this.selectedProject.entries.splice(index, 1);
-
-  this.selectedProject.total =
-    this.selectedProject.entries.reduce((sum, e) => sum + e.duration, 0);
-
-  this.save();
-},
-
-
-skipNote() {
-  this.note = "";
-  this.showNote = false;
-},
-
-    addProject() {
-      const name = prompt("Projektname");
-      if (!name) return;
-      this.projects.push({
-        id: String(Date.now()),
-        name,
-        entries: [],
-        todos: [],
-        total: 0,
-        color: `hsl(${Math.random() * 360},30%,55%)`
+    /* ── ENTRIES ──────────────────────────── */
+    saveEntry() {
+      if(!this.selectedProjectId) return alert("Projekt wählen");
+      if(this.elapsed<=0) return alert("Keine Zeit gemessen");
+      const project=this.projects.find(p=>String(p.id)===String(this.selectedProjectId));
+      if(!project) return alert("Projekt nicht gefunden");
+      const end  =new Date();
+      const start=new Date(end.getTime()-(this.elapsed+this.pausedTime)*1000);
+      project.entries.unshift({
+        id:crypto.randomUUID(),start:start.toISOString(),end:end.toISOString(),
+        duration:this.elapsed,paused:this.pausedTime,note:this.note||"",exported:false
       });
+      project.total=project.entries.reduce((s,e)=>s+e.duration,0);
+      this.save();
+      this.elapsed=0;this.pausedTime=0;this.note="";
+      this.showNote=false;this.running=false;this.paused=false;
+      this.startTime=null;this.pauseStart=null;
+      localStorage.setItem('timerRunning','false');
+      ['timerStart','timerPaused','timerPausedTime','timerPauseStart']
+        .forEach(k=>localStorage.removeItem(k));
+    },
+    skipNote(){this.note="";this.showNote=false;},
+
+    // Löschen per Index (Projektansicht)
+    deleteEntry(index) {
+      if(!confirm("Eintrag wirklich löschen?")) return;
+      this.selectedProject.entries.splice(index,1);
+      this.selectedProject.total=this.selectedProject.entries.reduce((s,e)=>s+e.duration,0);
+      this.save();
+    },
+    // Löschen per ID (Tagesansicht)
+    deleteEntryById(id) {
+      if(!confirm("Eintrag wirklich löschen?")) return;
+      for(const p of this.projects){
+        const i=p.entries.findIndex(e=>e.id===id);
+        if(i!==-1){p.entries.splice(i,1);p.total=p.entries.reduce((s,e)=>s+e.duration,0);break;}
+      }
       this.save();
     },
 
-        deleteProject() {
-      if (!confirm("Projekt wirklich löschen?")) return;
-      const index = this.projects.findIndex(p => p.id === this.selectedProject.id);
-      if (index === -1) return;
-      this.projects.splice(index, 1);
-      this.selectedProject = null;
-      this.selectedProjectId = '';
-      this.save();
+    updateEntryDate(entry,newDate) {
+      const s=new Date(entry.start),en=new Date(entry.end);
+      const [y,m,d]=newDate.split('-');
+      s.setFullYear(y,m-1,d);en.setFullYear(y,m-1,d);
+      entry.start=s.toISOString();entry.end=en.toISOString();
+      this.updateDuration(entry);
     },
-
-    openProject(p) {
-      this.selectedProject = p;
-      if (!p.entries) p.entries = [];
-      if (!p.todos) p.todos = [];
+    updateEntryTime(entry,timeStr,field) {
+      const d=new Date(entry[field]);
+      const [h,min]=timeStr.split(':');
+      d.setHours(h,min);
+      entry[field]=d.toISOString();
+      this.updateDuration(entry);
     },
-
-save() {
-  localStorage.setItem('projects', JSON.stringify(this.projects));
-  localStorage.setItem('dailyAdjustments', JSON.stringify(this.dailyAdjustments));
-},
     updateDuration(entry) {
-  const start = new Date(entry.start);
-  const end = new Date(entry.end);
+      const s=new Date(entry.start),e=new Date(entry.end);
+      entry.duration=Math.max(0,Math.round((e-s)/1000)-(entry.paused||0));
+      const p=this.projects.find(p=>p.entries.includes(entry));
+      if(p) p.total=p.entries.reduce((s,e)=>s+e.duration,0);
+      this.save();
+    },
 
-  // Dauer in Sekunden berechnen
-entry.duration = Math.max(0, Math.round((end - start)/1000) - (entry.paused || 0));
+    /* ── DRAG & DROP ─────────────────────── *
+     * Ansatz: Während des Drags passiert alles
+     * rein im DOM. Vue wird erst beim Loslassen
+     * einmal mit dem Ergebnis aktualisiert.
+     * ─────────────────────────────────────── */
 
-  // Projekt-Total neu berechnen
-  const project = this.projects.find(p => p.entries.includes(entry));
-  if (project) {
-    project.total = project.entries.reduce((sum, e) => sum + e.duration, 0);
-  }
+    _getDragContainer() {
+      // Der Container in dem die .project-item Elemente leben
+      return document.querySelector('.projects-list');
+    },
 
-  this.save();
-},
+    startDragMouse(index, e) {
+      e.preventDefault();
+      this._beginDrag(index, e.target.closest('.project-item'), e.clientX, e.clientY);
+      this._onMouseMove = (ev) => this._moveDrag(ev.clientX, ev.clientY);
+      this._onMouseUp   = ()   => this._endDrag();
+      document.addEventListener('mousemove', this._onMouseMove);
+      document.addEventListener('mouseup',   this._onMouseUp);
+    },
 
+    startDrag(index, e) {
+      this._beginDrag(index, e.target.closest('.project-item'), e.touches[0].clientX, e.touches[0].clientY);
+      this._onTouchMove = (ev) => { ev.preventDefault(); this._moveDrag(ev.touches[0].clientX, ev.touches[0].clientY); };
+      this._onTouchEnd  = ()   => this._endDrag();
+      document.addEventListener('touchmove', this._onTouchMove, { passive: false });
+      document.addEventListener('touchend',  this._onTouchEnd);
+    },
 
-addTodo() {
-  if (!this.newTodo || !this.newTodo.trim()) return;
+    _beginDrag(index, el, clientX, clientY) {
+      this._cleanupDrag();
 
-  if (!this.selectedProject.todos) {
-    this.selectedProject.todos = [];
-  }
+      const rect   = el.getBoundingClientRect();
+      const accent = el.style.getPropertyValue('--accent') || 'var(--accent)';
+      const name   = this.projects[index].name;
 
-  this.selectedProject.todos.push({
-    id: crypto.randomUUID(),
-    text: this.newTodo.trim(),
-    done: false
-  });
+      // Ghost: nur Name + Farbbalken, kein voller Klon
+      this._ghost = document.createElement('div');
+      this._ghost.className = 'drag-ghost';
+      this._ghost.innerHTML = `<span class="drag-ghost-name">${name}</span>`;
+      this._ghost.style.cssText = `
+        width:${rect.width}px; height:${rect.height}px;
+        top:${rect.top}px; left:${rect.left}px;
+      `;
+      this._ghost.style.setProperty('--accent', accent);
+      document.body.appendChild(this._ghost);
 
-  this.newTodo = "";
-  this.save();
-},
+      // Placeholder
+      this._placeholder = document.createElement('div');
+      this._placeholder.className = 'drag-placeholder';
+      this._placeholder.style.height = rect.height + 'px';
+      el.parentNode.insertBefore(this._placeholder, el);
 
-deleteTodo(index) {
-  if (!confirm("To-Do wirklich löschen?")) return;
+      el.style.display = 'none';
+      this._dragEl     = el;
+      this._offsetX    = clientX - rect.left;
+      this._offsetY    = clientY - rect.top;
+      this._dragIndex  = index;
 
-  this.selectedProject.todos.splice(index, 1);
-  this.save();
-},
+      if (navigator.vibrate) navigator.vibrate(40);
+    },
 
-async exportAll() {
+    _moveDrag(clientX, clientY) {
+      if (!this._ghost) return;
 
-  if (!this.selectedUser) {
-    alert("Bitte Benutzer wählen");
-    return;
-  }
+      // Ghost positionieren
+      this._ghost.style.top  = (clientY - this._offsetY) + 'px';
+      this._ghost.style.left = (clientX - this._offsetX) + 'px';
 
-  const data = this.projects
-    .map(p => ({
-      users: [
-        "Max",
-        "Anna",
-        "Tim"
-      ],
-      selectedUser: "Max",
-      id: p.id,
-      name: p.name,
-      entries: p.entries.filter(e => !e.exported)
-    }))
-    .filter(p => p.entries.length);
+      // Placeholder verschieben: finde das Element unter dem Ghost-Mittelpunkt
+      const ghostMidY = clientY - this._offsetY + this._ghost.offsetHeight / 2;
+      const container = this._dragEl.parentNode;
+      const siblings  = [...container.children].filter(
+        el => el !== this._dragEl && el !== this._placeholder && el.classList.contains('project-item')
+      );
 
-  if (!data.length) {
-    alert("Keine neuen Einträge");
-    return;
-  }
+      let inserted = false;
+      for (const sib of siblings) {
+        const r = sib.getBoundingClientRect();
+        if (ghostMidY < r.top + r.height / 2) {
+          container.insertBefore(this._placeholder, sib);
+          inserted = true;
+          break;
+        }
+      }
+      if (!inserted) {
+        // Ans Ende (vor dem ersten Nicht-project-item Element)
+        const afterItems = [...container.children].find(
+          el => !el.classList.contains('project-item') && el !== this._placeholder
+        );
+        if (afterItems) container.insertBefore(this._placeholder, afterItems);
+        else container.appendChild(this._placeholder);
+      }
 
-  try {
-    const res = await fetch(EXPORT_URL, {
-  method: "POST",
-body: JSON.stringify({
-  user: this.selectedUser,
-  projects: data,
-  dailyAdjustments: Object.fromEntries(
-    Object.entries(this.dailyAdjustments)
-      .filter(([date, value]) =>
-        value !== 0 && !this.exportedAdjustments[date]
-      )
-  )
-})
-});
+      // Auto-Scroll
+      if (clientY < 80)                      window.scrollBy(0, -8);
+      if (clientY > window.innerHeight - 80) window.scrollBy(0,  8);
+    },
 
+    _endDrag() {
+      if (!this._ghost) return;
 
-    if (!res.ok) throw new Error("Export fehlgeschlagen");
+      // Index VOR cleanup berechnen (danach ist _dragEl null)
+      const container  = this._dragEl.parentNode;
+      const dragIndex  = this._dragIndex;
+      let   newIndex   = 0;
+      for (const child of container.children) {
+        if (child === this._placeholder) break;
+        // ausgeblendetes Original nicht mitzählen
+        if (child.classList.contains('project-item') && child !== this._dragEl) newIndex++;
+      }
 
-    data.forEach(p => {
-      const orig = this.projects.find(x => x.id === p.id);
-      p.entries.forEach(e => {
-        const o = orig.entries.find(x => x.id === e.id);
-        if (o) o.exported = true;
-      });
-    });
-    // Überstunden als exportiert markieren
-Object.keys(this.dailyAdjustments).forEach(date => {
-  if (this.dailyAdjustments[date] !== 0) {
-    this.exportedAdjustments[date] = true;
-  }
-});
+      this._cleanupDrag();
 
-localStorage.setItem(
-  'exportedAdjustments',
-  JSON.stringify(this.exportedAdjustments)
-);
+      // Auch an letzter Stelle erlaubt (newIndex === projects.length - 1 ist gültig)
+      if (newIndex !== dragIndex && newIndex >= 0 && newIndex <= this.projects.length) {
+        const moved = this.projects.splice(dragIndex, 1)[0];
+        this.projects.splice(newIndex, 0, moved);
+        this.save();
+      }
+    },
 
-    this.save();
-    alert("Export erfolgreich ✅");
+    _cleanupDrag() {
+      if (this._onMouseMove) { document.removeEventListener('mousemove', this._onMouseMove); this._onMouseMove = null; }
+      if (this._onMouseUp)   { document.removeEventListener('mouseup',   this._onMouseUp);   this._onMouseUp   = null; }
+      if (this._onTouchMove) { document.removeEventListener('touchmove', this._onTouchMove); this._onTouchMove = null; }
+      if (this._onTouchEnd)  { document.removeEventListener('touchend',  this._onTouchEnd);  this._onTouchEnd  = null; }
+      if (this._ghost)       { this._ghost.remove();       this._ghost       = null; }
+      if (this._placeholder) { this._placeholder.remove(); this._placeholder = null; }
+      if (this._dragEl)      { this._dragEl.style.display = ''; this._dragEl = null; }
+      this.dragProjectIndex = null;
+    },
 
-    const now = new Date().toISOString();
-    localStorage.setItem('lastExport', now);
-    this.lastExport = now;
+    /* ── PROJECTS ────────────────────────── */
+    addProject() {
+      const name=prompt("Projektname");if(!name) return;
+      this.projects.push({id:String(Date.now()),name,entries:[],todos:[],total:0,
+        color:`hsl(${Math.random()*360},30%,55%)`});
+      this.save();
+    },
+    deleteProject() {
+      if(!confirm("Projekt wirklich löschen?")) return;
+      const i=this.projects.findIndex(p=>p.id===this.selectedProject.id);
+      if(i===-1) return;
+      this.projects.splice(i,1);
+      this.selectedProject=null;this.selectedProjectId='';
+      this.save();
+    },
+    openProject(p) {
+      this.selectedProject=p;
+      if(!p.entries) p.entries=[];
+      if(!p.todos)   p.todos=[];
+    },
 
-  } catch (err) {
-    console.error(err);
-    alert("Fehler beim Export ❌");
-  }
-},
+    /* ── TODOS ───────────────────────────── */
+    addTodo() {
+      if(!this.newTodo||!this.newTodo.trim()) return;
+      if(!this.selectedProject.todos) this.selectedProject.todos=[];
+      this.selectedProject.todos.push({id:crypto.randomUUID(),text:this.newTodo.trim(),done:false});
+      this.newTodo="";this.save();
+    },
+    deleteTodo(i) {
+      if(!confirm("To-Do wirklich löschen?")) return;
+      this.selectedProject.todos.splice(i,1);this.save();
+    },
 
+    /* ── EXPORT ─────────────────────────── */
+    async exportAll() {
+      if(!this.selectedUser) return alert("Bitte Benutzer wählen");
+      const data=this.projects
+        .map(p=>({id:p.id,name:p.name,entries:p.entries.filter(e=>!e.exported)}))
+        .filter(p=>p.entries.length);
+      if(!data.length) return alert("Keine neuen Einträge");
+      this.exporting=true;
+      try {
+        const res=await fetch(EXPORT_URL,{
+          method:"POST",
+          body:JSON.stringify({
+            user:this.selectedUser,projects:data,
+            dailyAdjustments:Object.fromEntries(
+              Object.entries(this.dailyAdjustments)
+                .filter(([d,v])=>v!==0&&!this.exportedAdjustments[d])
+            )
+          })
+        });
+        if(!res.ok) throw new Error("Export fehlgeschlagen");
+        data.forEach(p=>{
+          const orig=this.projects.find(x=>x.id===p.id);
+          p.entries.forEach(e=>{const o=orig.entries.find(x=>x.id===e.id);if(o) o.exported=true;});
+        });
+        Object.keys(this.dailyAdjustments).forEach(d=>{
+          if(this.dailyAdjustments[d]!==0) this.exportedAdjustments[d]=true;
+        });
+        this.save();
+        alert("Export erfolgreich ✅");
+        const now=new Date().toISOString();
+        localStorage.setItem('lastExport',now);this.lastExport=now;
+      } catch(err){console.error(err);alert("Fehler beim Export ❌");}
+      finally{this.exporting=false;}
+    },
 
+    /* ── HELPERS ─────────────────────────── */
+    save() {
+      localStorage.setItem('projects',           JSON.stringify(this.projects));
+      localStorage.setItem('dailyAdjustments',   JSON.stringify(this.dailyAdjustments));
+      localStorage.setItem('exportedAdjustments',JSON.stringify(this.exportedAdjustments));
+    },
+    // Für <input type="time">
+    formatTimeValue(iso) {
+      const d=new Date(iso);
+      return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+    },
     formatTime(iso) {
-      const d = new Date(iso);
-      return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      return new Date(iso).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
     },
-
+    formatWeekday(isoDay) {
+      return new Date(isoDay).toLocaleDateString('de-DE',{weekday:'short'});
+    },
+    formatShortDate(isoDay) {
+      return new Date(isoDay).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+    },
     formatDay(isoDay) {
-      const d = new Date(isoDay);
-      return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
+      return new Date(isoDay).toLocaleDateString('de-DE',
+        {weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'});
     },
-    openDay(day) {
-  this.selectedDay = day;
-},
+    openDay(day){this.selectedDay=day;},
   }
 }).mount('#app');
 </script>
-
 </body>
 </html>
