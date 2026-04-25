@@ -121,7 +121,7 @@ nav button.active{color:#fff;border-bottom:3px solid var(--accent)}
 }
 .project-item span{display:block;margin-top:.3rem;font-size:.75rem;font-weight:400}
 
-/* Ghost: schwebt über allem */
+/* Ghost */
 .drag-ghost{
   position:fixed;pointer-events:none;z-index:2000;
   border-radius:8px 20px 20px 8px;
@@ -139,14 +139,12 @@ nav button.active{color:#fff;border-bottom:3px solid var(--accent)}
   font-size:1rem;font-weight:700;color:var(--text);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-/* Placeholder: zeigt wo das Element landen wird */
 .drag-placeholder{
   margin-bottom:1rem;
   border-radius:8px 20px 20px 8px;
   border:2px dashed var(--accent);
   background:rgba(66,125,161,.07);
 }
-
 .drag-handle{
   position:absolute;right:12px;top:50%;transform:translateY(-50%);
   cursor:grab;font-size:20px;opacity:.4;user-select:none;touch-action:none;padding:.4rem;
@@ -229,9 +227,7 @@ textarea{
   text-transform:uppercase;letter-spacing:.07em;
   color:var(--accent);
 }
-.day-date .datestr{
-  font-size:1rem;font-weight:700;color:var(--text);
-}
+.day-date .datestr{font-size:1rem;font-weight:700;color:var(--text);}
 
 /* ── EXPORT SPINNER ── */
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -254,6 +250,42 @@ textarea{
   position:absolute;left:0;top:0;bottom:0;
   width:7px;border-radius:7px 0 0 7px;
 }
+
+/* ── ÜBERSTUNDEN SCROLL-PICKER ── */
+.adj-picker{
+  display:flex;align-items:center;gap:.6rem;
+  margin-top:.5rem;
+}
+.adj-btn{
+  width:40px;height:40px;border-radius:50%;border:none;
+  background:#e8edf0;font-size:1.4rem;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:background .15s;user-select:none;
+  color:var(--text);
+}
+.adj-btn:active{background:#d0d8de}
+.adj-track{
+  flex:1;overflow:hidden;position:relative;height:44px;
+}
+/* Scroll-Drum */
+.adj-drum{
+  display:flex;flex-direction:column;align-items:center;
+  transition:transform .18s cubic-bezier(.25,.8,.25,1);
+}
+.adj-drum-item{
+  height:44px;line-height:44px;font-size:1.1rem;font-weight:700;
+  text-align:center;width:100%;
+  white-space:nowrap;
+}
+/* Sichtfenster: nur mittleres Item sichtbar */
+.adj-track::before,
+.adj-track::after{
+  content:"";position:absolute;left:0;right:0;height:14px;z-index:2;
+  pointer-events:none;
+}
+.adj-track::before{top:0;background:linear-gradient(to bottom,#f3f5f7,transparent)}
+.adj-track::after{bottom:0;background:linear-gradient(to top,#f3f5f7,transparent)}
+/* (adj-value entfernt) */
 </style>
 </head>
 <body>
@@ -422,7 +454,7 @@ textarea{
 </div>
 
 <!-- ══════════════════════════════════
-     TAG-DETAIL MODAL (NEU: editierbar + synchronisiert)
+     TAG-DETAIL MODAL
 ══════════════════════════════════ -->
 <div v-if="dayDetail" class="modal">
   <div class="modal-card">
@@ -433,22 +465,49 @@ textarea{
       ⏱ {{(dayDetail.totalSeconds/3600).toFixed(2)}} h
     </p>
 
-    <!-- Über-/Minusstunden -->
+    <!-- Über-/Minusstunden Scroll-Picker -->
     <div style="background:#f3f5f7;border-radius:12px;padding:.8rem;margin-bottom:1.1rem">
-      <label style="font-size:.85rem;color:#666">Über-/Minusstunden</label>
-      <input v-if="!exportedAdjustments[dayDetail.date]"
-             type="number" step="0.25"
-             :value="dailyAdjustments[dayDetail.date]||0"
-             @input="val=>{dailyAdjustments[dayDetail.date]=parseFloat(val.target.value)||0;save()}"
-             style="width:100%;padding:.45rem .6rem;margin-top:.4rem;border-radius:8px;border:1px solid #ddd;font-size:1rem;font-family:inherit">
-      <div v-else style="margin-top:.4rem;font-weight:700"
+      <label style="font-size:.85rem;color:#666;display:block;margin-bottom:.4rem">Über-/Minusstunden</label>
+
+      <div v-if="!exportedAdjustments[dayDetail.date]" class="adj-picker">
+        <!-- − scrollt Trommel nach oben → kleinere Werte -->
+        <button class="adj-btn" @click="stepAdj(dayDetail.date,-0.25)" @mousedown.prevent>−</button>
+
+        <div class="adj-track" @click="startAdjEdit(dayDetail.date)" style="cursor:pointer">
+          <div class="adj-drum" :style="adjDrumStyle(dayDetail.date)">
+            <div v-for="v in adjSteps" :key="v" class="adj-drum-item"
+                 :style="{color: v>0?'#16a34a':(v<0?'var(--danger)':'inherit'),
+                          opacity: Math.abs(v-(dailyAdjustments[dayDetail.date]||0))<0.01?1:.22,
+                          fontWeight: Math.abs(v-(dailyAdjustments[dayDetail.date]||0))<0.01?'700':'400'}">
+              {{v>0?'+':''}}{{v.toFixed(2)}} h
+            </div>
+          </div>
+          <!-- Manuelle Eingabe overlay -->
+          <input v-if="adjEditDate===dayDetail.date"
+                 type="number" step="0.25"
+                 v-model.number="adjEditValue"
+                 @blur="commitAdjEdit"
+                 @keyup.enter="commitAdjEdit"
+                 @keyup.escape="adjEditDate=null"
+                 ref="adjInput"
+                 style="position:absolute;inset:0;width:100%;height:100%;
+                        border:2px solid var(--accent);border-radius:8px;
+                        font-size:1.1rem;font-weight:700;text-align:center;
+                        background:#fff;font-family:inherit;z-index:3;padding:0">
+        </div>
+
+        <!-- + scrollt Trommel nach unten → größere Werte -->
+        <button class="adj-btn" @click="stepAdj(dayDetail.date,+0.25)" @mousedown.prevent>+</button>
+      </div>
+
+      <div v-else style="font-weight:700;margin-top:.2rem"
            :style="{color:(dailyAdjustments[dayDetail.date]||0)>=0?'#16a34a':'var(--danger)'}">
         {{(dailyAdjustments[dayDetail.date]||0)>0?'+':''}}
         {{(dailyAdjustments[dayDetail.date]||0).toFixed(2)}} h
       </div>
     </div>
 
-    <!-- Einträge pro Projekt – direkt editierbar, synchronisiert mit Projektansicht -->
+    <!-- Einträge pro Projekt -->
     <div v-for="p in dayDetail.projects" :key="p.id" class="day-project-block">
       <span class="day-project-color-bar" :style="{background:p.color}"></span>
       <div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;margin-bottom:.6rem">
@@ -491,6 +550,15 @@ textarea{
 const EXPORT_URL = "https://script.google.com/macros/s/AKfycbybPVsyCMPSffBkGEx6zKn7QzP5-JS8VdsyCGlUTgT8mcB1P2pZs4VU3JexYkmYipiRYA/exec";
 const { createApp } = Vue;
 
+// Alle möglichen Schritte: -8.50 bis +8.00 in 0.25-Schritten
+const ADJ_MIN   = -8.5;
+const ADJ_MAX   =  8.0;
+const ADJ_STEP  =  0.25;
+const ADJ_STEPS = [];
+for (let v = ADJ_MIN; v <= ADJ_MAX + 0.001; v += ADJ_STEP) {
+  ADJ_STEPS.push(Math.round(v * 100) / 100);
+}
+
 createApp({
   data() {
     return {
@@ -498,8 +566,7 @@ createApp({
       projects: [],
       selectedProjectId: '',
       selectedProject: null,
-      // Drag & Drop (interne Felder, kein Vue-State nötig)
-      dragProjectIndex: null, // nur für @click-Guard im Template
+      dragProjectIndex: null,
       // Timer
       timer: null, elapsed: 0,
       running: false, startTime: null,
@@ -514,6 +581,10 @@ createApp({
       lastExport: null,
       exportedAdjustments: {},
       exporting: false,
+      // Picker-Schritte
+      adjSteps: ADJ_STEPS,
+      adjEditDate: null,
+      adjEditValue: 0,
     };
   },
 
@@ -541,7 +612,6 @@ createApp({
       });
       return Object.values(map).sort((a,b)=>b.date.localeCompare(a.date));
     },
-    // Gibt echte Objekt-Referenzen zurück → Änderungen hier = Änderungen überall
     dayDetail() {
       if(!this.selectedDay) return null;
       const pm={};
@@ -552,7 +622,7 @@ createApp({
           if(!pm[p.id]) pm[p.id]={id:p.id,name:p.name,color:p.color,seconds:0,entries:[]};
           pm[p.id].seconds+=e.duration||0;
           total+=e.duration||0;
-          pm[p.id].entries.push(e); // ← echte Referenz, kein Copy!
+          pm[p.id].entries.push(e);
         });
       });
       return {date:this.selectedDay,totalSeconds:total,projects:Object.values(pm)};
@@ -562,7 +632,6 @@ createApp({
   watch: {
     selectedUser(v)      { if(v) localStorage.setItem('selectedUser',v); },
     selectedProjectId(v) { localStorage.setItem('selectedProjectId',v||''); },
-    // Body-Scroll sperren wenn ein Modal offen ist
     isModalOpen(v) {
       if (v) {
         this._scrollY = window.scrollY;
@@ -599,6 +668,47 @@ createApp({
   },
 
   methods: {
+
+    /* ── ÜBERSTUNDEN PICKER ─────────────── */
+    stepAdj(date, delta) {
+      const current = Math.round((this.dailyAdjustments[date] || 0) * 100) / 100;
+      const next    = Math.round((current + delta) * 100) / 100;
+      if (next < ADJ_MIN || next > ADJ_MAX) return;
+      this.dailyAdjustments[date] = next;
+      this.dailyAdjustments = { ...this.dailyAdjustments };
+      this.save();
+    },
+
+    // Trommel: − = nach oben (kleinere Werte oben), + = nach unten
+    // Index 0 = ADJ_MIN (−8.5), letzter = ADJ_MAX (+8.0)
+    // translateY negativ = Trommel nach oben schieben = höhere Indizes sichtbar
+    adjDrumStyle(date) {
+      const val  = Math.round((this.dailyAdjustments[date] || 0) * 100) / 100;
+      const idx  = ADJ_STEPS.findIndex(v => Math.abs(v - val) < 0.001);
+      const itemH = 44;
+      // Zentriere den aktiven Eintrag im 44px-Fenster
+      const offset = -idx * itemH;
+      return { transform: `translateY(${offset}px)` };
+    },
+
+    startAdjEdit(date) {
+      this.adjEditDate  = date;
+      this.adjEditValue = this.dailyAdjustments[date] || 0;
+      this.$nextTick(() => { if (this.$refs.adjInput) this.$refs.adjInput.focus(); });
+    },
+
+    commitAdjEdit() {
+      if (this.adjEditDate === null) return;
+      let val = Math.round((this.adjEditValue || 0) * 100) / 100;
+      val = Math.max(ADJ_MIN, Math.min(ADJ_MAX, val));
+      // Auf nächsten 0.25-Schritt runden
+      val = Math.round(val / ADJ_STEP) * ADJ_STEP;
+      val = Math.round(val * 100) / 100;
+      this.dailyAdjustments[this.adjEditDate] = val;
+      this.dailyAdjustments = { ...this.dailyAdjustments };
+      this.save();
+      this.adjEditDate = null;
+    },
 
     /* ── TIMER ────────────────────────────── */
     start() {
@@ -665,14 +775,12 @@ createApp({
     },
     skipNote(){this.note="";this.showNote=false;},
 
-    // Löschen per Index (Projektansicht)
     deleteEntry(index) {
       if(!confirm("Eintrag wirklich löschen?")) return;
       this.selectedProject.entries.splice(index,1);
       this.selectedProject.total=this.selectedProject.entries.reduce((s,e)=>s+e.duration,0);
       this.save();
     },
-    // Löschen per ID (Tagesansicht)
     deleteEntryById(id) {
       if(!confirm("Eintrag wirklich löschen?")) return;
       for(const p of this.projects){
@@ -704,17 +812,7 @@ createApp({
       this.save();
     },
 
-    /* ── DRAG & DROP ─────────────────────── *
-     * Ansatz: Während des Drags passiert alles
-     * rein im DOM. Vue wird erst beim Loslassen
-     * einmal mit dem Ergebnis aktualisiert.
-     * ─────────────────────────────────────── */
-
-    _getDragContainer() {
-      // Der Container in dem die .project-item Elemente leben
-      return document.querySelector('.projects-list');
-    },
-
+    /* ── DRAG & DROP ─────────────────────── */
     startDragMouse(index, e) {
       e.preventDefault();
       this._beginDrag(index, e.target.closest('.project-item'), e.clientX, e.clientY);
@@ -723,7 +821,6 @@ createApp({
       document.addEventListener('mousemove', this._onMouseMove);
       document.addEventListener('mouseup',   this._onMouseUp);
     },
-
     startDrag(index, e) {
       this._beginDrag(index, e.target.closest('.project-item'), e.touches[0].clientX, e.touches[0].clientY);
       this._onTouchMove = (ev) => { ev.preventDefault(); this._moveDrag(ev.touches[0].clientX, ev.touches[0].clientY); };
@@ -731,54 +828,37 @@ createApp({
       document.addEventListener('touchmove', this._onTouchMove, { passive: false });
       document.addEventListener('touchend',  this._onTouchEnd);
     },
-
     _beginDrag(index, el, clientX, clientY) {
       this._cleanupDrag();
-
       const rect   = el.getBoundingClientRect();
       const accent = el.style.getPropertyValue('--accent') || 'var(--accent)';
       const name   = this.projects[index].name;
-
-      // Ghost: nur Name + Farbbalken, kein voller Klon
       this._ghost = document.createElement('div');
       this._ghost.className = 'drag-ghost';
       this._ghost.innerHTML = `<span class="drag-ghost-name">${name}</span>`;
-      this._ghost.style.cssText = `
-        width:${rect.width}px; height:${rect.height}px;
-        top:${rect.top}px; left:${rect.left}px;
-      `;
+      this._ghost.style.cssText = `width:${rect.width}px;height:${rect.height}px;top:${rect.top}px;left:${rect.left}px;`;
       this._ghost.style.setProperty('--accent', accent);
       document.body.appendChild(this._ghost);
-
-      // Placeholder
       this._placeholder = document.createElement('div');
       this._placeholder.className = 'drag-placeholder';
       this._placeholder.style.height = rect.height + 'px';
       el.parentNode.insertBefore(this._placeholder, el);
-
       el.style.display = 'none';
-      this._dragEl     = el;
-      this._offsetX    = clientX - rect.left;
-      this._offsetY    = clientY - rect.top;
-      this._dragIndex  = index;
-
+      this._dragEl    = el;
+      this._offsetX   = clientX - rect.left;
+      this._offsetY   = clientY - rect.top;
+      this._dragIndex = index;
       if (navigator.vibrate) navigator.vibrate(40);
     },
-
     _moveDrag(clientX, clientY) {
       if (!this._ghost) return;
-
-      // Ghost positionieren
       this._ghost.style.top  = (clientY - this._offsetY) + 'px';
       this._ghost.style.left = (clientX - this._offsetX) + 'px';
-
-      // Placeholder verschieben: finde das Element unter dem Ghost-Mittelpunkt
       const ghostMidY = clientY - this._offsetY + this._ghost.offsetHeight / 2;
       const container = this._dragEl.parentNode;
       const siblings  = [...container.children].filter(
         el => el !== this._dragEl && el !== this._placeholder && el.classList.contains('project-item')
       );
-
       let inserted = false;
       for (const sib of siblings) {
         const r = sib.getBoundingClientRect();
@@ -789,42 +869,31 @@ createApp({
         }
       }
       if (!inserted) {
-        // Ans Ende (vor dem ersten Nicht-project-item Element)
         const afterItems = [...container.children].find(
           el => !el.classList.contains('project-item') && el !== this._placeholder
         );
         if (afterItems) container.insertBefore(this._placeholder, afterItems);
         else container.appendChild(this._placeholder);
       }
-
-      // Auto-Scroll
       if (clientY < 80)                      window.scrollBy(0, -8);
       if (clientY > window.innerHeight - 80) window.scrollBy(0,  8);
     },
-
     _endDrag() {
       if (!this._ghost) return;
-
-      // Index VOR cleanup berechnen (danach ist _dragEl null)
-      const container  = this._dragEl.parentNode;
-      const dragIndex  = this._dragIndex;
-      let   newIndex   = 0;
+      const container = this._dragEl.parentNode;
+      const dragIndex = this._dragIndex;
+      let newIndex = 0;
       for (const child of container.children) {
         if (child === this._placeholder) break;
-        // ausgeblendetes Original nicht mitzählen
         if (child.classList.contains('project-item') && child !== this._dragEl) newIndex++;
       }
-
       this._cleanupDrag();
-
-      // Auch an letzter Stelle erlaubt (newIndex === projects.length - 1 ist gültig)
       if (newIndex !== dragIndex && newIndex >= 0 && newIndex <= this.projects.length) {
         const moved = this.projects.splice(dragIndex, 1)[0];
         this.projects.splice(newIndex, 0, moved);
         this.save();
       }
     },
-
     _cleanupDrag() {
       if (this._onMouseMove) { document.removeEventListener('mousemove', this._onMouseMove); this._onMouseMove = null; }
       if (this._onMouseUp)   { document.removeEventListener('mouseup',   this._onMouseUp);   this._onMouseUp   = null; }
@@ -873,7 +942,21 @@ createApp({
     async exportAll() {
       if(!this.selectedUser) return alert("Bitte Benutzer wählen");
       const data=this.projects
-        .map(p=>({id:p.id,name:p.name,entries:p.entries.filter(e=>!e.exported)}))
+        .map(p=>({
+          id:   p.id,
+          name: p.name,
+          entries: p.entries
+            .filter(e=>!e.exported)
+            .map(e=>({
+              ...e,
+              // FIX: Nur Datum exportieren, kein ISO-Timestamp → saubere Gruppierung im Sheet
+              start: e.start.slice(0,10),
+              end:   e.end.slice(0,10),
+              // Uhrzeiten separat für Sheet-Spalten
+              startTime: this.formatTimeValue(e.start),
+              endTime:   this.formatTimeValue(e.end),
+            }))
+        }))
         .filter(p=>p.entries.length);
       if(!data.length) return alert("Keine neuen Einträge");
       this.exporting=true;
@@ -910,7 +993,6 @@ createApp({
       localStorage.setItem('dailyAdjustments',   JSON.stringify(this.dailyAdjustments));
       localStorage.setItem('exportedAdjustments',JSON.stringify(this.exportedAdjustments));
     },
-    // Für <input type="time">
     formatTimeValue(iso) {
       const d=new Date(iso);
       return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
